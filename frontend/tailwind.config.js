@@ -13,27 +13,21 @@ export default {
       // ── MailForenSIX colour palette (from UX_Dev.md) ────────────────────────
       colors: {
         mfx: {
-          // Backgrounds
-          bg:       '#0F172A',   // dark base
-          surface:  '#1E293B',   // cards, panels, modals
-          border:   '#334155',   // subtle borders
+          // Themed via CSS custom properties (see index.css)
+          bg:         'var(--mfx-bg)',
+          surface:    'var(--mfx-surface)',
+          border:     'var(--mfx-border)',
+          text:       'var(--mfx-text)',
+          muted:      'var(--mfx-muted)',
+          accent:     'var(--mfx-accent)',
 
-          // Accent
-          accent:   '#3B82F6',   // buttons, active states, links
-
-          // Risk tiers
-          critical: '#EF4444',   // ≥85
-          high:     '#F97316',   // 60-84
-          suspicious:'#F59E0B',  // 30-59
-          safe:     '#10B981',   // 0-29
-
-          // LIME
-          malicious:'#DC2626',   // sentence highlight — threat
-          benign:   '#16A34A',   // sentence highlight — safe
-
-          // Text
-          text:     '#F8FAFC',   // headings, labels, badges
-          muted:    '#94A3B8',   // timestamps, metadata, footnotes
+          // Risk tiers — fixed regardless of theme
+          critical:   '#EF4444',
+          high:       '#F97316',
+          suspicious: '#F59E0B',
+          safe:       '#10B981',
+          malicious:  '#DC2626',
+          benign:     '#16A34A',
         },
       },
 
@@ -43,12 +37,15 @@ export default {
       },
 
       fontSize: {
-        xs:   ['11px', '1.5'],
-        sm:   ['13px', '1.5'],
-        base: ['14px', '1.5'],
-        lg:   ['16px', '1.4'],
-        xl:   ['20px', '1.3'],
-        '2xl':['24px', '1.2'],
+        xs:   ['12px', '1.5'],
+        sm:   ['14px', '1.5'],
+        base: ['16px', '1.6'],
+        lg:   ['18px', '1.5'],
+        xl:   ['22px', '1.3'],
+        '2xl':['28px', '1.2'],
+        '3xl':['36px', '1.1'],
+        '4xl':['42px', '1.1'],
+        '6xl':['60px', '1'],
       },
 
       borderRadius: {

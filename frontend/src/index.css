@@ -6,25 +6,46 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Theme variables — dark (default) ───────────────────────────────────── */
+:root {
+  --mfx-bg:         #0F172A;
+  --mfx-surface:    #1E293B;
+  --mfx-border:     #334155;
+  --mfx-text:       #F8FAFC;
+  --mfx-muted:      #94A3B8;
+  --mfx-accent:     #3B82F6;
+}
+
+/* ── Light mode overrides ───────────────────────────────────────────────── */
+:root.light {
+  --mfx-bg:         #F1F5F9;
+  --mfx-surface:    #FFFFFF;
+  --mfx-border:     #CBD5E1;
+  --mfx-text:       #0F172A;
+  --mfx-muted:      #64748B;
+  --mfx-accent:     #2563EB;
+}
+
 /* ── Base resets ─────────────────────────────────────────────────────────── */
 @layer base {
   body {
-    @apply bg-mfx-bg text-mfx-text font-sans text-base antialiased;
+    background-color: var(--mfx-bg);
+    color: var(--mfx-text);
+    @apply font-sans antialiased;
     min-height: 100dvh;
+    font-size: 16px;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
-  * {
-    @apply box-border;
-  }
+  * { @apply box-border; }
 
-  /* Monospaced elements — IPs, hashes, timestamps */
-  code, pre, .mono {
-    @apply font-mono;
-  }
+  /* Monospaced elements */
+  code, pre, .mono { @apply font-mono; }
 
   /* Focus ring — WCAG AA */
   :focus-visible {
-    @apply outline-none ring-2 ring-mfx-accent ring-offset-2 ring-offset-mfx-bg;
+    @apply outline-none ring-2 ring-mfx-accent ring-offset-2;
+    ring-offset-color: var(--mfx-bg);
   }
 }
 
@@ -32,7 +53,9 @@
 @layer components {
   /* Panel card */
   .panel {
-    @apply bg-mfx-surface border border-mfx-border rounded-panel shadow-panel p-4;
+    background-color: var(--mfx-surface);
+    border: 1px solid var(--mfx-border);
+    @apply rounded-panel shadow-panel p-5;
   }
 
   /* Risk tier badge */
@@ -45,7 +68,7 @@
   .badge-suspicious{ @apply bg-mfx-suspicious/20 text-mfx-suspicious; }
   .badge-safe      { @apply bg-mfx-safe/20 text-mfx-safe; }
 
-  /* Auth status pill */
+  /* Auth status */
   .auth-pass { @apply text-mfx-safe; }
   .auth-fail { @apply text-mfx-critical; }
   .auth-warn { @apply text-mfx-suspicious; }
@@ -53,25 +76,23 @@
 
   /* Primary button */
   .btn-primary {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-badge
+    @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-badge
            bg-mfx-accent text-white font-semibold text-sm
            hover:bg-blue-500 active:scale-95
            transition-all duration-150 cursor-pointer
            focus-visible:ring-2 focus-visible:ring-mfx-accent;
   }
 
-  /* Secondary / ghost button */
+  /* Ghost button */
   .btn-ghost {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-badge
+    @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-badge
            border border-mfx-border text-mfx-muted text-sm
            hover:border-mfx-accent hover:text-mfx-text
            transition-all duration-150 cursor-pointer;
   }
 
   /* Skeleton loader */
-  .skeleton {
-    @apply bg-mfx-border rounded animate-pulse;
-  }
+  .skeleton { @apply bg-mfx-border rounded animate-pulse; }
 
   /* Section label */
   .panel-label {
@@ -79,19 +100,21 @@
   }
 
   /* Divider */
-  .divider {
-    @apply border-t border-mfx-border my-4;
-  }
+  .divider { @apply border-t border-mfx-border my-4; }
 }
 
 /* ── Scrollbar styling (Webkit) ──────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar { width: 7px; height: 7px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { @apply bg-mfx-border rounded-full; }
-::-webkit-scrollbar-thumb:hover { @apply bg-mfx-muted; }
+::-webkit-scrollbar-thumb { border-radius: 99px; background: var(--mfx-border); }
+::-webkit-scrollbar-thumb:hover { background: var(--mfx-muted); }
 
-/* ── Leaflet map override — force dark tiles ─────────────────────────────── */
+/* ── Leaflet map override ─────────────────────────────────────────────────── */
 .leaflet-container {
-  @apply bg-mfx-surface rounded-panel;
+  background-color: var(--mfx-surface);
+  @apply rounded-panel;
   font-family: inherit;
 }
+
+/* ── Light mode: invert Leaflet dark tiles ─────────────────────────────── */
+:root.light .leaflet-tile { filter: invert(1) hue-rotate(180deg) brightness(0.9); }
