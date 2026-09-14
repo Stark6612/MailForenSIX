@@ -58,12 +58,12 @@ export default function UploadZone({
         onClick={() => !emlFile && inputRef.current?.click()}
         className={`relative flex flex-col items-center justify-center gap-2
           border-2 border-dashed rounded-panel p-6 cursor-pointer
-          transition-all duration-200 select-none
+          transition-all duration-200 select-none backdrop-blur-md
           ${dragging
             ? 'border-mfx-accent bg-mfx-accent/10 shadow-glow'
             : emlFile
               ? 'border-mfx-safe bg-mfx-safe/5'
-              : 'border-mfx-border bg-mfx-surface hover:border-mfx-accent/60'
+              : 'border-white/[0.08] bg-mfx-surface/75 hover:border-mfx-accent/50 hover:bg-mfx-surface/90'
           }`}
       >
         <input

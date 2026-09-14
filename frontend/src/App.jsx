@@ -14,6 +14,7 @@ import PanelDomainIntel from './components/panels/PanelDomainIntel'
 import PanelDossier from './components/panels/PanelDossier'
 import PipelineProgress from './components/PipelineProgress'
 import ErrorBanner from './components/ErrorBanner'
+import ScrollReveal from './components/animations/ScrollReveal'
 
 export default function App() {
   const [airGapped, setAirGapped] = useState(false)
@@ -133,24 +134,54 @@ export default function App() {
         {/* ── Error banner ────────────────────────────────────────────── */}
         {isError && <ErrorBanner message={error} onDismiss={reset} />}
 
-        {/* ── 7-Panel dashboard grid ────────────────────────────────────── */}
+        {/* ── 7-Panel dashboard grid with ScrollReveal ──────────────────── */}
         {(isSuccess || isLoading) && (
           <ErrorBoundary onReset={reset}>
-            <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="mt-6 space-y-4">
+              {/* Section Header */}
+              <div className="flex items-center justify-between px-1">
+                <h2 className="text-xl font-bold tracking-tight text-mfx-text flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-mfx-accent animate-pulse" />
+                  Forensic Intelligence Dossier
+                </h2>
+                <span className="text-xs text-mfx-muted font-mono uppercase tracking-wider">
+                  7 Analysis Engines Active
+                </span>
+              </div>
 
-              {/* Row 1 */}
-              <PanelRiskGauge   data={result} loading={isLoading} />
-              <PanelAuthMatrix  data={result} loading={isLoading} />
-              <PanelLeafletMap  data={result} loading={isLoading} airGapped={airGapped} />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {/* Row 1 */}
+                <ScrollReveal baseRotation={0.4} baseOpacity={0.3} blurStrength={0} containerClassName="h-full">
+                  <PanelRiskGauge data={result} loading={isLoading} />
+                </ScrollReveal>
 
-              {/* Row 2 */}
-              <PanelLimeHeatmap  data={result} loading={isLoading} />
-              <PanelRelayTable   data={result} loading={isLoading} />
-              <PanelDomainIntel  data={result} loading={isLoading} />
+                <ScrollReveal baseRotation={0.4} baseOpacity={0.3} blurStrength={0} containerClassName="h-full">
+                  <PanelAuthMatrix data={result} loading={isLoading} />
+                </ScrollReveal>
 
-              {/* Row 3 — full-width dossier strip */}
-              <div className="lg:col-span-3">
-                <PanelDossier data={result} loading={isLoading} airGapped={airGapped} />
+                <ScrollReveal baseRotation={0.4} baseOpacity={0.3} blurStrength={0} containerClassName="h-full">
+                  <PanelLeafletMap data={result} loading={isLoading} airGapped={airGapped} />
+                </ScrollReveal>
+
+                {/* Row 2 */}
+                <ScrollReveal baseRotation={0.4} baseOpacity={0.3} blurStrength={0} containerClassName="h-full">
+                  <PanelLimeHeatmap data={result} loading={isLoading} />
+                </ScrollReveal>
+
+                <ScrollReveal baseRotation={0.4} baseOpacity={0.3} blurStrength={0} containerClassName="h-full">
+                  <PanelRelayTable data={result} loading={isLoading} />
+                </ScrollReveal>
+
+                <ScrollReveal baseRotation={0.4} baseOpacity={0.3} blurStrength={0} containerClassName="h-full">
+                  <PanelDomainIntel data={result} loading={isLoading} />
+                </ScrollReveal>
+
+                {/* Row 3 — full-width dossier strip */}
+                <div className="lg:col-span-3">
+                  <ScrollReveal baseRotation={0.3} baseOpacity={0.3} blurStrength={0} containerClassName="w-full">
+                    <PanelDossier data={result} loading={isLoading} airGapped={airGapped} />
+                  </ScrollReveal>
+                </div>
               </div>
             </div>
           </ErrorBoundary>
@@ -158,19 +189,29 @@ export default function App() {
 
         {/* ── Idle state hint ─────────────────────────────────────────── */}
         {status === STATUS.IDLE && (
-          <div className="mt-16 flex flex-col items-center gap-4 text-mfx-muted animate-fade-in">
-            <div className="text-6xl">🔍</div>
-            <p className="text-xl font-semibold text-mfx-text">Upload a suspicious email to begin analysis</p>
-            <p className="text-base">Supports <code className="text-mfx-accent">.eml</code> files or raw header paste</p>
-            <div className="flex gap-5 mt-3 text-sm text-mfx-muted flex-wrap justify-center">
-              <kbd className="px-3 py-1.5 bg-mfx-surface border border-mfx-border rounded-badge font-mono">Ctrl+Enter</kbd>
-              <span className="self-center">to analyze</span>
-              <kbd className="px-3 py-1.5 bg-mfx-surface border border-mfx-border rounded-badge font-mono">Ctrl+E</kbd>
-              <span className="self-center">to export</span>
-              <kbd className="px-3 py-1.5 bg-mfx-surface border border-mfx-border rounded-badge font-mono">Space</kbd>
-              <span className="self-center">air-gap toggle</span>
+          <ScrollReveal baseRotation={0} baseOpacity={0.4} blurStrength={0} containerClassName="mt-16 w-full">
+            <div className="flex flex-col items-center gap-4 text-mfx-muted">
+              <div className="w-16 h-16 rounded-2xl bg-mfx-accent/10 border border-mfx-accent/20 flex items-center justify-center text-3xl shadow-glow">
+                🔍
+              </div>
+              <p className="text-2xl font-bold tracking-tight text-mfx-text">Upload a suspicious email to begin analysis</p>
+              <p className="text-base text-mfx-muted">Supports <code className="text-mfx-accent font-semibold">.eml</code> files or raw header pastes</p>
+              <div className="flex gap-4 mt-2 text-sm text-mfx-muted flex-wrap justify-center">
+                <div className="flex items-center gap-2 bg-mfx-surface/80 border border-white/[0.08] px-3.5 py-1.5 rounded-lg">
+                  <kbd className="px-2 py-0.5 bg-mfx-bg border border-mfx-border rounded text-xs font-mono text-mfx-accent">Ctrl+Enter</kbd>
+                  <span>to analyze</span>
+                </div>
+                <div className="flex items-center gap-2 bg-mfx-surface/80 border border-white/[0.08] px-3.5 py-1.5 rounded-lg">
+                  <kbd className="px-2 py-0.5 bg-mfx-bg border border-mfx-border rounded text-xs font-mono text-mfx-accent">Ctrl+E</kbd>
+                  <span>to export</span>
+                </div>
+                <div className="flex items-center gap-2 bg-mfx-surface/80 border border-white/[0.08] px-3.5 py-1.5 rounded-lg">
+                  <kbd className="px-2 py-0.5 bg-mfx-bg border border-mfx-border rounded text-xs font-mono text-mfx-accent">Space</kbd>
+                  <span>air-gap toggle</span>
+                </div>
+              </div>
             </div>
-          </div>
+          </ScrollReveal>
         )}
       </main>
     </div>

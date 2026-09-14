@@ -32,8 +32,7 @@ export default function TopBar({ airGapped, onToggleAirGap }) {
   const mlLoaded  = health?.ml_model_loaded === true
 
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-md border-b"
-      style={{ background: 'var(--mfx-bg)', borderColor: 'var(--mfx-border)' }}>
+    <header className="sticky top-0 z-50 backdrop-blur-xl border-b border-white/[0.08] bg-mfx-bg/80">
       <div className="w-full px-8 h-16 flex items-center justify-between">
 
         {/* ── Logo ──────────────────────────────────────────────────────── */}

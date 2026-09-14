@@ -28,11 +28,11 @@
 }
 .spotlight-card > * { position: relative; z-index: 1; }
 
-/* ── Theme variables — dark only ───────────────────────────────────────── */
+/* ── Theme variables — Webhound / Framer dark obsidian & cyber blue ─── */
 :root {
-  --mfx-bg:         #0F172A;
-  --mfx-surface:    #1E293B;
-  --mfx-border:     #334155;
+  --mfx-bg:         #070B12;
+  --mfx-surface:    #0D1424;
+  --mfx-border:     #1E293B;
   --mfx-text:       #F8FAFC;
   --mfx-muted:      #94A3B8;
   --mfx-accent:     #3B82F6;
@@ -42,6 +42,10 @@
 @layer base {
   body {
     background-color: var(--mfx-bg);
+    background-image: 
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.15), transparent 70%),
+      radial-gradient(ellipse 60% 40% at 100% 100%, rgba(37, 99, 235, 0.08), transparent 60%);
+    background-attachment: fixed;
     color: var(--mfx-text);
     @apply font-sans antialiased;
     min-height: 100dvh;
@@ -63,11 +67,17 @@
 
 /* ── Component layer ─────────────────────────────────────────────────────── */
 @layer components {
-  /* Panel card */
+  /* Panel card — Webhound & Framer obsidian glassmorphism */
   .panel {
-    background-color: var(--mfx-surface);
-    border: 1px solid var(--mfx-border);
-    @apply rounded-panel shadow-panel p-5;
+    background-color: rgba(13, 20, 36, 0.82);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    @apply rounded-panel shadow-panel p-5 transition-all duration-200;
+  }
+  .panel:hover {
+    border-color: rgba(59, 130, 246, 0.28);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45), 0 0 16px 0 rgba(59, 130, 246, 0.08);
   }
 
   /* Risk tier badge */
