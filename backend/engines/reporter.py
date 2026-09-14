@@ -300,7 +300,34 @@ def generate_dossier(data: "AnalysisResponse") -> bytes:
             ["Created",         di.creation_date or "—"],
             ["Expires",         di.expiry_date or "—"],
             ["MX Valid",        "✓ Yes" if di.mx_valid else "✗ No"],
-            ["Privacy Proxy",       # ── IT ACT 2000 — contextual selection ────────────────────────────────────────
+            ["Privacy Proxy",   "⚠ Yes" if di.privacy_proxy else "No"],
+            ["Suspicion Score", f"{int((di.suspicion_score or 0)*100)}%"],
+        ]
+        for note in (di.notes or []):
+            di_rows.append(["Note", Paragraph(f"📌 {note}", SML)])
+
+        di_tbl = Table(di_rows, colWidths=[W*0.25, W*0.75])
+        di_tbl.setStyle(TableStyle([
+            ("BOX",          (0,0),(-1,-1), 0.5, c(*_BORDER)),
+            ("INNERGRID",    (0,0),(-1,-1), 0.3, c(*_BORDER)),
+            ("FONTSIZE",     (0,0),(-1,-1), 8),
+            ("FONTNAME",     (0,0),(0,-1),  "Helvetica-Bold"),
+            ("BACKGROUND",   (0,0),(0,-1),  c(*_LIGHT)),
+            ("TOPPADDING",   (0,0),(-1,-1), 4),
+            ("BOTTOMPADDING",(0,0),(-1,-1), 4),
+            ("LEFTPADDING",  (0,0),(-1,-1), 8),
+        ]))
+        story.append(di_tbl)
+        story.append(Spacer(1, 10))
+
+    # ── WARNINGS ───────────────────────────────────────────────────────────────
+    if data.warnings:
+        story.append(Paragraph("Analyst Warnings", H2))
+        for w in data.warnings:
+            story.append(Paragraph(f"⚠ {w}", sty("Warn", fontSize=8, textColor=c(*_WARN), leftIndent=6)))
+        story.append(Spacer(1, 10))
+
+    # ── IT ACT 2000 — contextual selection ────────────────────────────────────────
     story.append(Paragraph("Legal Reference — IT Act 2000 (Applicable Sections)", H2))
 
     _tier_v  = data.risk_tier.value   if hasattr(data.risk_tier,   "value") else str(data.risk_tier)
