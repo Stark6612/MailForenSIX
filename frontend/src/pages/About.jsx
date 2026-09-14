@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import DecryptedText from '../components/animations/DecryptedText'
+import StrokeText from '../components/animations/StrokeText'
 import SpotlightCard from '../components/animations/SpotlightCard'
 import CountUp from '../components/animations/CountUp'
 
@@ -110,14 +110,23 @@ export default function About() {
             <span className="w-2 h-2 rounded-full bg-mfx-accent animate-pulse" />
             SIH 2026 · Problem #26106 · Team CyberNexus
           </div>
-          <h1 className="text-6xl font-extrabold tracking-tight">
-            <DecryptedText
+          <div className="max-w-xl mx-auto py-1">
+            <StrokeText
               text="MailForenSIX"
-              speed={35}
-              maxIterations={14}
-              className="inline"
+              strokeColor="#3B82F6"
+              fillColor="#F8FAFC"
+              strokeWidth={1.4}
+              drawDuration={1.6}
+              fillDelay={0.2}
+              stagger={0.05}
+              ease="power2.out"
+              trigger="mount"
+              fillMode="wipe"
+              fontSize={80}
+              fontWeight={800}
+              letterSpacing={-2}
             />
-          </h1>
+          </div>
           <p className="text-mfx-muted text-lg max-w-2xl mx-auto">
             An AI-powered email threat detection, geolocation, and forensic intelligence platform
             — built for cybersecurity analysts, forensic investigators, and law enforcement.
