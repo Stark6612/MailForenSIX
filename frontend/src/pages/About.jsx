@@ -2,13 +2,20 @@ import { Link } from 'react-router-dom'
 import StrokeText from '../components/animations/StrokeText'
 import SpotlightCard from '../components/animations/SpotlightCard'
 import CountUp from '../components/animations/CountUp'
+import ScrollReveal from '../components/animations/ScrollReveal'
 
 // ── Reusable card shell ────────────────────────────────────────────────────────
-function Card({ children, className = '' }) {
-  return (
+function Card({ children, className = '', scrollReveal = true }) {
+  const inner = (
     <div className={`bg-mfx-surface border border-mfx-border rounded-panel p-6 ${className}`}>
       {children}
     </div>
+  )
+  if (!scrollReveal) return inner
+  return (
+    <ScrollReveal baseRotation={0.5} baseOpacity={0.3} blurStrength={0} containerClassName="w-full">
+      {inner}
+    </ScrollReveal>
   )
 }
 
@@ -127,33 +134,41 @@ export default function About() {
               letterSpacing={-2}
             />
           </div>
-          <p className="text-mfx-muted text-lg max-w-2xl mx-auto">
-            An AI-powered email threat detection, geolocation, and forensic intelligence platform
-            — built for cybersecurity analysts, forensic investigators, and law enforcement.
-          </p>
+          <ScrollReveal
+            enableBlur={true}
+            baseOpacity={0.2}
+            blurStrength={3}
+            baseRotation={0}
+            containerClassName="max-w-2xl mx-auto"
+            textClassName="text-mfx-muted text-lg text-center leading-relaxed"
+          >
+            An AI-powered email threat detection, geolocation, and forensic intelligence platform — built for cybersecurity analysts, forensic investigators, and law enforcement.
+          </ScrollReveal>
         </div>
 
         {/* ── MVP Disclaimer banner ──────────────────────────────────────── */}
-        <div className="rounded-panel border border-mfx-suspicious/40 bg-mfx-suspicious/10 p-5
-                        flex gap-4 items-start">
-          <span className="text-2xl flex-shrink-0">⚠️</span>
-          <div className="space-y-1.5">
-            <p className="text-base font-semibold text-mfx-suspicious">
-              Demo Build — Not for Production Investigative Use
-            </p>
-            <p className="text-sm text-mfx-muted leading-relaxed">
-              This is an MVP built for the Smart India Hackathon 2026 (48-hour sprint).
-              This live deployment is shared for demonstration and evaluation purposes only.
-              When you submit an email here, its content is processed by our server.
-              For actual forensic investigations involving sensitive or confidential emails,
-              <strong className="text-mfx-text"> run MailForenSIX locally</strong> using Docker —
-              your data never leaves your machine.
-              See the <a href="https://github.com/Stark6612/MailForenSIX" target="_blank"
-              rel="noopener noreferrer" className="text-mfx-accent hover:underline">GitHub repo</a> for
-              local setup instructions.
-            </p>
+        <ScrollReveal baseRotation={0.5} baseOpacity={0.4} blurStrength={0} containerClassName="w-full">
+          <div className="rounded-panel border border-mfx-suspicious/40 bg-mfx-suspicious/10 p-5
+                          flex gap-4 items-start">
+            <span className="text-2xl flex-shrink-0">⚠️</span>
+            <div className="space-y-1.5">
+              <p className="text-base font-semibold text-mfx-suspicious">
+                Demo Build — Not for Production Investigative Use
+              </p>
+              <p className="text-sm text-mfx-muted leading-relaxed">
+                This is an MVP built for the Smart India Hackathon 2026 (48-hour sprint).
+                This live deployment is shared for demonstration and evaluation purposes only.
+                When you submit an email here, its content is processed by our server.
+                For actual forensic investigations involving sensitive or confidential emails,
+                <strong className="text-mfx-text"> run MailForenSIX locally</strong> using Docker —
+                your data never leaves your machine.
+                See the <a href="https://github.com/Stark6612/MailForenSIX" target="_blank"
+                rel="noopener noreferrer" className="text-mfx-accent hover:underline">GitHub repo</a> for
+                local setup instructions.
+              </p>
+            </div>
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* ── Main grid — 3 cols ──────────────────────────────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
