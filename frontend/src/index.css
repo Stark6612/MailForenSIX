@@ -6,6 +6,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Spotlight Card (ReactBits) ──────────────────────────────────────────── */
+.spotlight-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+}
+.spotlight-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: radial-gradient(
+    400px circle at var(--spotlight-x, 50%) var(--spotlight-y, 50%),
+    var(--spotlight-color, transparent),
+    transparent 70%
+  );
+  z-index: 0;
+  transition: background 0.1s ease;
+}
+.spotlight-card > * { position: relative; z-index: 1; }
+
 /* ── Theme variables — dark only ───────────────────────────────────────── */
 :root {
   --mfx-bg:         #0F172A;

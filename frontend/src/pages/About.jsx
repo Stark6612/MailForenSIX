@@ -1,4 +1,7 @@
 import { Link } from 'react-router-dom'
+import DecryptedText from '../components/animations/DecryptedText'
+import SpotlightCard from '../components/animations/SpotlightCard'
+import CountUp from '../components/animations/CountUp'
 
 // ── Reusable card shell ────────────────────────────────────────────────────────
 function Card({ children, className = '' }) {
@@ -55,16 +58,20 @@ function Step({ n, title, children }) {
 
 function NoveltyCard({ icon, title, children }) {
   return (
-    <div className="p-5 rounded-lg bg-mfx-bg border border-mfx-border hover:border-mfx-accent/40
-                    transition-colors group">
-      <div className="flex items-center gap-2 mb-2.5">
-        <span className="text-2xl">{icon}</span>
-        <span className="text-base font-bold text-mfx-text group-hover:text-mfx-accent transition-colors">
-          {title}
-        </span>
+    <SpotlightCard
+      className="bg-mfx-bg border border-mfx-border hover:border-mfx-accent/40 transition-colors group"
+      spotlightColor="rgba(59,130,246,0.12)"
+    >
+      <div className="p-5">
+        <div className="flex items-center gap-2 mb-2.5">
+          <span className="text-2xl">{icon}</span>
+          <span className="text-base font-bold text-mfx-text group-hover:text-mfx-accent transition-colors">
+            {title}
+          </span>
+        </div>
+        <p className="text-sm text-mfx-muted leading-relaxed">{children}</p>
       </div>
-      <p className="text-sm text-mfx-muted leading-relaxed">{children}</p>
-    </div>
+    </SpotlightCard>
   )
 }
 
@@ -104,7 +111,12 @@ export default function About() {
             SIH 2026 · Problem #26106 · Team CyberNexus
           </div>
           <h1 className="text-6xl font-extrabold tracking-tight">
-            MailForen<span className="text-mfx-accent">SIX</span>
+            <DecryptedText
+              text="MailForenSIX"
+              speed={35}
+              maxIterations={14}
+              className="inline"
+            />
           </h1>
           <p className="text-mfx-muted text-lg max-w-2xl mx-auto">
             An AI-powered email threat detection, geolocation, and forensic intelligence platform
@@ -190,13 +202,17 @@ export default function About() {
             <SectionTitle icon="🏆">Quick Stats</SectionTitle>
             <div className="space-y-3">
               {[
-                { label: 'Training Emails', value: '83,497', icon: '📧' },
-                { label: 'Test Accuracy', value: '97.23%', icon: '🎯' },
-                { label: 'F1 Score', value: '97.34%', icon: '📐' },
+                { label: 'Training Emails', value: '83,497', icon: '📧',
+                  animated: <CountUp from={0} to={83497} separator="," duration={1.8} /> },
+                { label: 'Test Accuracy', value: '97.23%', icon: '🎯',
+                  animated: <><CountUp from={0} to={97.23} decimals={2} duration={1.5} />%</> },
+                { label: 'F1 Score', value: '97.34%', icon: '📐',
+                  animated: <><CountUp from={0} to={97.34} decimals={2} duration={1.5} />%</> },
                 { label: 'Classify Speed', value: '0.005 ms', icon: '⚡' },
                 { label: 'Pipeline Time', value: '< 15s', icon: '🚀' },
                 { label: 'Geo DB Size', value: '62 MB offline', icon: '🗺️' },
-                { label: 'Risk Signals', value: '4 engines', icon: '🔬' },
+                { label: 'Risk Signals', value: '4 engines', icon: '🔬',
+                  animated: <><CountUp from={0} to={4} duration={1} /> engines</> },
                 { label: 'IT Act Sections', value: '§43 · §66 · §66C · §66D', icon: '⚖️' },
                 { label: 'Evidence Anchor', value: 'Bitcoin blockchain', icon: '⛓️' },
                 { label: 'Docker Deploy', value: '1 command', icon: '🐳' },
@@ -206,7 +222,7 @@ export default function About() {
                   <span className="flex items-center gap-2 text-sm text-mfx-muted">
                     <span>{s.icon}</span>{s.label}
                   </span>
-                  <span className="text-sm font-bold text-mfx-accent font-mono">{s.value}</span>
+                  <span className="text-sm font-bold text-mfx-accent font-mono">{s.animated ?? s.value}</span>
                 </div>
               ))}
             </div>
