@@ -6,10 +6,14 @@
 
 import axios from 'axios'
 
-const BASE = import.meta.env.VITE_API_BASE ?? '/api/v1'
+const RAW_BASE = import.meta.env.VITE_API_BASE ?? '/api/v1'
+// If VITE_API_BASE is e.g. "https://mailforensix-backend.onrender.com/api/v1", root is "https://mailforensix-backend.onrender.com"
+const BACKEND_ROOT = RAW_BASE.startsWith('http')
+  ? RAW_BASE.replace(/\/api\/v1\/?$/, '')
+  : ''
 
 export const api = axios.create({
-  baseURL: BASE,
+  baseURL: RAW_BASE,
   timeout: 90_000,   // 90s — full pipeline can take up to 60s
 })
 
@@ -34,7 +38,8 @@ export async function analyzeEmail(emlFile, rawText) {
  * GET /health — used by the frontend to show backend connectivity status
  */
 export async function checkHealth() {
-  const { data } = await api.get('/health', { baseURL: '' })
+  const url = BACKEND_ROOT ? `${BACKEND_ROOT}/health` : '/health'
+  const { data } = await axios.get(url, { timeout: 10_000 })
   return data
 }
 

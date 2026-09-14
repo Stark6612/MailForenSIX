@@ -11,11 +11,12 @@ class Settings(BaseSettings):
     APP_NAME: str = "MailForenSIX"
     DEBUG: bool = True
 
-    # CORS — frontend dev server + production
+    # CORS — frontend dev server + production Vercel apps
     CORS_ORIGINS: List[str] = [
         "http://localhost:5173",   # Vite dev server
         "http://localhost:3000",
         "http://127.0.0.1:5173",
+        "*",
     ]
 
     # Database
