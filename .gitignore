@@ -1,0 +1,54 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+build/
+
+# ── ML model artifacts (large binaries — provide via release or DVC) ──────────
+# *.pkl            ← KEPT: models shipped in repo for instant docker compose
+# *.mmdb           ← KEPT: GeoLite2-City.mmdb shipped for offline mode
+
+# ── Environments ──────────────────────────────────────────────────────────────
+.env
+.venv/
+venv/
+env/
+
+# ── Node / Frontend ────────────────────────────────────────────────────────────
+node_modules/
+frontend/dist/
+.cache/
+
+# ── Database & runtime state ──────────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+
+# ── Raw training data — entire folder excluded ────────────────────────────────
+# Contains ~50k raw email files, CSVs, Parquet. Too large for GitHub.
+# Run scripts/prepare_dataset.py + scripts/train_classifier.py to regenerate.
+backend/data/
+
+# ── OTS evidence receipts (generated per-analysis, not source code) ───────────
+backend/anchors/*.ots
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── OS ───────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Docker ───────────────────────────────────────────────────────────────────
+docker-compose.override.yml
+
+# ── Test artifacts ────────────────────────────────────────────────────────────
+.pytest_cache/
+htmlcov/
+.coverage

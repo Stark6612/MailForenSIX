@@ -1,0 +1,97 @@
+/* ── Google Fonts ─────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ── Tailwind layers ─────────────────────────────────────────────────────── */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base resets ─────────────────────────────────────────────────────────── */
+@layer base {
+  body {
+    @apply bg-mfx-bg text-mfx-text font-sans text-base antialiased;
+    min-height: 100dvh;
+  }
+
+  * {
+    @apply box-border;
+  }
+
+  /* Monospaced elements — IPs, hashes, timestamps */
+  code, pre, .mono {
+    @apply font-mono;
+  }
+
+  /* Focus ring — WCAG AA */
+  :focus-visible {
+    @apply outline-none ring-2 ring-mfx-accent ring-offset-2 ring-offset-mfx-bg;
+  }
+}
+
+/* ── Component layer ─────────────────────────────────────────────────────── */
+@layer components {
+  /* Panel card */
+  .panel {
+    @apply bg-mfx-surface border border-mfx-border rounded-panel shadow-panel p-4;
+  }
+
+  /* Risk tier badge */
+  .badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-badge
+           text-xs font-semibold uppercase tracking-wider;
+  }
+  .badge-critical  { @apply bg-mfx-critical/20 text-mfx-critical; }
+  .badge-high      { @apply bg-mfx-high/20 text-mfx-high; }
+  .badge-suspicious{ @apply bg-mfx-suspicious/20 text-mfx-suspicious; }
+  .badge-safe      { @apply bg-mfx-safe/20 text-mfx-safe; }
+
+  /* Auth status pill */
+  .auth-pass { @apply text-mfx-safe; }
+  .auth-fail { @apply text-mfx-critical; }
+  .auth-warn { @apply text-mfx-suspicious; }
+  .auth-none { @apply text-mfx-muted; }
+
+  /* Primary button */
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-badge
+           bg-mfx-accent text-white font-semibold text-sm
+           hover:bg-blue-500 active:scale-95
+           transition-all duration-150 cursor-pointer
+           focus-visible:ring-2 focus-visible:ring-mfx-accent;
+  }
+
+  /* Secondary / ghost button */
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-badge
+           border border-mfx-border text-mfx-muted text-sm
+           hover:border-mfx-accent hover:text-mfx-text
+           transition-all duration-150 cursor-pointer;
+  }
+
+  /* Skeleton loader */
+  .skeleton {
+    @apply bg-mfx-border rounded animate-pulse;
+  }
+
+  /* Section label */
+  .panel-label {
+    @apply text-xs font-semibold uppercase tracking-widest text-mfx-muted mb-3;
+  }
+
+  /* Divider */
+  .divider {
+    @apply border-t border-mfx-border my-4;
+  }
+}
+
+/* ── Scrollbar styling (Webkit) ──────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { @apply bg-mfx-border rounded-full; }
+::-webkit-scrollbar-thumb:hover { @apply bg-mfx-muted; }
+
+/* ── Leaflet map override — force dark tiles ─────────────────────────────── */
+.leaflet-container {
+  @apply bg-mfx-surface rounded-panel;
+  font-family: inherit;
+}

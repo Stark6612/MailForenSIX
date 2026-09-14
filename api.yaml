@@ -1,0 +1,153 @@
+openapi: 3.1.0
+info:
+  title: MailForenSIX API
+  description: >
+    AI-Powered Email Threat Detection & Forensic Intelligence Platform
+    SIH 2026 — Problem ID #26106
+  version: 0.1.0
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local development
+
+paths:
+
+  /analyze:
+    post:
+      summary: Analyze a suspicious email
+      operationId: analyze_email
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                eml_file:
+                  type: string
+                  format: binary
+                  description: .eml file upload (max 10 MB)
+                raw_headers:
+                  type: string
+                  description: Paste full email source text
+      responses:
+        '200':
+          description: Full analysis result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResponse'
+        '400':
+          description: Invalid or malformed email
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '413':
+          description: File size exceeds 10 MB limit
+
+  /health:
+    get:
+      summary: Backend liveness probe
+      operationId: health_check
+      responses:
+        '200':
+          description: Backend healthy
+          content:
+            application/json:
+              example: { status: ok, service: mailforensix-backend, version: "0.1.0" }
+
+components:
+  schemas:
+
+    AuthStatus:
+      type: string
+      enum: [pass, fail, warn, none]
+
+    RiskTier:
+      type: string
+      enum: [safe, suspicious, high, critical]
+
+    ThreatLabel:
+      type: string
+      enum: [safe, suspicious, phishing, bec, impersonation]
+
+    AuthResult:
+      type: object
+      properties:
+        spf:    { $ref: '#/components/schemas/AuthStatus' }
+        dkim:   { $ref: '#/components/schemas/AuthStatus' }
+        dmarc:  { $ref: '#/components/schemas/AuthStatus' }
+        details:
+          type: string
+          nullable: true
+
+    LIMESentence:
+      type: object
+      properties:
+        text:        { type: string }
+        score:       { type: number, minimum: 0, maximum: 1 }
+        explanation: { type: string }
+
+    RelayHop:
+      type: object
+      properties:
+        hop_index:   { type: integer }
+        ip:          { type: string }
+        hostname:    { type: string, nullable: true }
+        country:     { type: string, nullable: true }
+        city:        { type: string, nullable: true }
+        asn:         { type: string, nullable: true }
+        isp:         { type: string, nullable: true }
+        lat:         { type: number, nullable: true }
+        lon:         { type: number, nullable: true }
+        masked:      { type: boolean }
+        mask_reason: { type: string, nullable: true }
+        geo_mode:    { type: string, enum: [online, offline, cached, stub] }
+
+    DomainIntel:
+      type: object
+      properties:
+        domain:          { type: string }
+        age_days:        { type: integer, nullable: true }
+        registrar:       { type: string, nullable: true }
+        creation_date:   { type: string, nullable: true }
+        expiry_date:     { type: string, nullable: true }
+        mx_valid:        { type: boolean }
+        privacy_proxy:   { type: boolean }
+        suspicion_score: { type: number, minimum: 0, maximum: 1 }
+        notes:           { type: array, items: { type: string } }
+
+    ForensicMeta:
+      type: object
+      properties:
+        email_sha256:        { type: string }
+        analysis_timestamp:  { type: string, format: date-time }
+        air_gapped:          { type: boolean }
+
+    AnalysisResponse:
+      type: object
+      required: [analysis_id, risk_score, risk_tier, threat_label, confidence, auth, forensic]
+      properties:
+        analysis_id:     { type: string, format: uuid }
+        subject:         { type: string, nullable: true }
+        sender:          { type: string, nullable: true }
+        recipient:       { type: string, nullable: true }
+        date:            { type: string, nullable: true }
+        risk_score:      { type: integer, minimum: 0, maximum: 100 }
+        risk_tier:       { $ref: '#/components/schemas/RiskTier' }
+        threat_label:    { $ref: '#/components/schemas/ThreatLabel' }
+        confidence:      { type: number, minimum: 0, maximum: 1 }
+        auth:            { $ref: '#/components/schemas/AuthResult' }
+        lime_sentences:  { type: array, items: { $ref: '#/components/schemas/LIMESentence' } }
+        relay_hops:      { type: array, items: { $ref: '#/components/schemas/RelayHop' } }
+        domain_intel:    { $ref: '#/components/schemas/DomainIntel' }
+        forensic:        { $ref: '#/components/schemas/ForensicMeta' }
+        warnings:        { type: array, items: { type: string } }
+
+    ErrorResponse:
+      type: object
+      properties:
+        error_code: { type: string }
+        message:    { type: string }
+        detail:     { type: string, nullable: true }

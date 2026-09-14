@@ -1,0 +1,47 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mailforensix-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app          # live reload in dev
+      - mfx-db:/app/data
+    environment:
+      - DEBUG=true
+      - AIR_GAPPED=false
+      - DATABASE_URL=sqlite+aiosqlite:///./data/mailforensix.db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - mailforensix-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mailforensix-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules        # preserve container node_modules
+    environment:
+      - VITE_API_BASE=http://localhost:8000/api/v1
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - mailforensix-net
+
+volumes:
+  mfx-db:
+
+networks:
+  mailforensix-net:
+    driver: bridge
