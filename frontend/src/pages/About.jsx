@@ -11,7 +11,7 @@ function Card({ children, className = '' }) {
 
 function SectionTitle({ icon, children }) {
   return (
-    <h2 className="flex items-center gap-2 text-lg font-bold text-mfx-text mb-4">
+    <h2 className="flex items-center gap-2 text-xl font-bold text-mfx-text mb-5">
       <span className="text-mfx-accent">{icon}</span>
       {children}
     </h2>
@@ -20,15 +20,15 @@ function SectionTitle({ icon, children }) {
 
 function MetricRow({ label, value, sub, pass }) {
   return (
-    <div className="flex items-center justify-between py-2 border-b border-mfx-border last:border-0">
+    <div className="flex items-center justify-between py-3 border-b border-mfx-border last:border-0">
       <div>
-        <span className="text-sm text-mfx-text font-medium">{label}</span>
-        {sub && <span className="ml-2 text-xs text-mfx-muted">{sub}</span>}
+        <span className="text-base text-mfx-text font-medium">{label}</span>
+        {sub && <span className="ml-2 text-sm text-mfx-muted">{sub}</span>}
       </div>
       <div className="flex items-center gap-2">
-        <span className="text-sm font-bold text-mfx-accent font-mono">{value}</span>
+        <span className="text-base font-bold text-mfx-accent font-mono">{value}</span>
         {pass !== undefined && (
-          <span className={`text-xs px-1.5 py-0.5 rounded-badge font-semibold
+          <span className={`text-sm px-2 py-0.5 rounded-badge font-semibold
             ${pass ? 'bg-mfx-safe/20 text-mfx-safe' : 'bg-mfx-critical/20 text-mfx-critical'}`}>
             {pass ? '✓ Pass' : '✗ Fail'}
           </span>
@@ -41,13 +41,13 @@ function MetricRow({ label, value, sub, pass }) {
 function Step({ n, title, children }) {
   return (
     <div className="flex gap-4">
-      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-mfx-accent/20 border border-mfx-accent/40
-                      flex items-center justify-center text-sm font-bold text-mfx-accent">
+      <div className="flex-shrink-0 w-9 h-9 rounded-full bg-mfx-accent/20 border border-mfx-accent/40
+                      flex items-center justify-center text-base font-bold text-mfx-accent">
         {n}
       </div>
-      <div className="pb-5 border-b border-mfx-border last:border-0 flex-1">
-        <p className="text-sm font-semibold text-mfx-text mb-1">{title}</p>
-        <p className="text-xs text-mfx-muted leading-relaxed">{children}</p>
+      <div className="pb-6 border-b border-mfx-border last:border-0 flex-1">
+        <p className="text-base font-semibold text-mfx-text mb-1">{title}</p>
+        <p className="text-sm text-mfx-muted leading-relaxed">{children}</p>
       </div>
     </div>
   )
@@ -55,15 +55,15 @@ function Step({ n, title, children }) {
 
 function NoveltyCard({ icon, title, children }) {
   return (
-    <div className="p-4 rounded-lg bg-mfx-bg border border-mfx-border hover:border-mfx-accent/40
+    <div className="p-5 rounded-lg bg-mfx-bg border border-mfx-border hover:border-mfx-accent/40
                     transition-colors group">
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-xl">{icon}</span>
-        <span className="text-sm font-bold text-mfx-text group-hover:text-mfx-accent transition-colors">
+      <div className="flex items-center gap-2 mb-2.5">
+        <span className="text-2xl">{icon}</span>
+        <span className="text-base font-bold text-mfx-text group-hover:text-mfx-accent transition-colors">
           {title}
         </span>
       </div>
-      <p className="text-xs text-mfx-muted leading-relaxed">{children}</p>
+      <p className="text-sm text-mfx-muted leading-relaxed">{children}</p>
     </div>
   )
 }
@@ -98,29 +98,29 @@ export default function About() {
 
         {/* ── Hero ──────────────────────────────────────────────────────── */}
         <div className="text-center space-y-3 pb-4">
-          <div className="inline-flex items-center gap-2 text-xs text-mfx-muted border border-mfx-border
-                          px-3 py-1 rounded-full mb-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-mfx-accent animate-pulse" />
+          <div className="inline-flex items-center gap-2 text-sm text-mfx-muted border border-mfx-border
+                          px-4 py-1.5 rounded-full mb-3">
+            <span className="w-2 h-2 rounded-full bg-mfx-accent animate-pulse" />
             SIH 2026 · Problem #26106 · Team CyberNexus
           </div>
-          <h1 className="text-4xl font-extrabold tracking-tight">
+          <h1 className="text-6xl font-extrabold tracking-tight">
             MailForen<span className="text-mfx-accent">SIX</span>
           </h1>
-          <p className="text-mfx-muted text-base max-w-xl mx-auto">
+          <p className="text-mfx-muted text-lg max-w-2xl mx-auto">
             An AI-powered email threat detection, geolocation, and forensic intelligence platform
             — built for cybersecurity analysts, forensic investigators, and law enforcement.
           </p>
         </div>
 
         {/* ── MVP Disclaimer banner ──────────────────────────────────────── */}
-        <div className="rounded-panel border border-mfx-suspicious/40 bg-mfx-suspicious/10 p-4
-                        flex gap-3 items-start">
-          <span className="text-xl flex-shrink-0">⚠️</span>
-          <div className="space-y-1">
-            <p className="text-sm font-semibold text-mfx-suspicious">
+        <div className="rounded-panel border border-mfx-suspicious/40 bg-mfx-suspicious/10 p-5
+                        flex gap-4 items-start">
+          <span className="text-2xl flex-shrink-0">⚠️</span>
+          <div className="space-y-1.5">
+            <p className="text-base font-semibold text-mfx-suspicious">
               Demo Build — Not for Production Investigative Use
             </p>
-            <p className="text-xs text-mfx-muted leading-relaxed">
+            <p className="text-sm text-mfx-muted leading-relaxed">
               This is an MVP built for the Smart India Hackathon 2026 (48-hour sprint).
               This live deployment is shared for demonstration and evaluation purposes only.
               When you submit an email here, its content is processed by our server.
@@ -140,7 +140,7 @@ export default function About() {
           {/* ML Metrics */}
           <Card>
             <SectionTitle icon="📊">Model Performance</SectionTitle>
-            <p className="text-xs text-mfx-muted mb-4">
+            <p className="text-sm text-mfx-muted mb-5">
               Trained on <strong className="text-mfx-text">83,497 emails</strong> (43,040 phishing · 40,457 ham).
               Evaluated on a <strong className="text-mfx-text">16,700-email stratified hold-out set</strong> (20%, random_state=42).
             </p>
@@ -150,7 +150,7 @@ export default function About() {
             <MetricRow label="F1 Score"  value="97.34%" sub="target ≥ 91%" pass={true} />
             <MetricRow label="Classify latency" value="0.005 ms" sub="per email, CPU" pass={true} />
             <MetricRow label="Pipeline latency" value="< 15s" sub="typical, online mode" pass={true} />
-            <div className="mt-4 text-xs text-mfx-muted bg-mfx-bg rounded p-3 border border-mfx-border">
+            <div className="mt-5 text-sm text-mfx-muted bg-mfx-bg rounded p-4 border border-mfx-border">
               <strong className="text-mfx-text">Stack:</strong> XGBoost (200 trees, depth 6) ·
               TF-IDF (ngram 1–3, 50k features) · LIME sentence-level explanations ·
               Synthetic URLTOKEN + URGENCYTOKEN features
@@ -224,19 +224,19 @@ export default function About() {
         {/* ── Local deployment ────────────────────────────────────────────── */}
         <Card>
           <SectionTitle icon="🐳">For Real Investigations — Run Locally</SectionTitle>
-          <p className="text-xs text-mfx-muted mb-4">
+          <p className="text-sm text-mfx-muted mb-5">
             MailForenSIX is intentionally designed to be self-hosted. The air-gap mode,
             local MaxMind DB, and SQLite cache exist precisely so sensitive email evidence
             never needs to leave the investigator's machine.
           </p>
-          <div className="bg-mfx-bg rounded border border-mfx-border p-4 font-mono text-xs text-mfx-accent space-y-1">
+          <div className="bg-mfx-bg rounded border border-mfx-border p-5 font-mono text-sm text-mfx-accent space-y-1.5">
             <p className="text-mfx-muted"># One-command local setup</p>
-            <p>git clone https://github.com/Stark6612/SIH_2026.git</p>
-            <p>cd SIH_2026/MailForenSIX/mail-foren-six</p>
+            <p>git clone https://github.com/Stark6612/MailForenSIX.git</p>
+            <p>cd MailForenSIX</p>
             <p>docker compose up --build</p>
             <p className="text-mfx-muted mt-2"># Then open http://localhost:5173</p>
           </div>
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
             <div className="flex items-start gap-2 p-3 bg-mfx-bg rounded border border-mfx-border">
               <span className="text-mfx-safe text-base">✓</span>
               <span className="text-mfx-muted">All models included in repo — no extra downloads</span>
@@ -255,7 +255,7 @@ export default function About() {
         {/* ── Pipeline overview ───────────────────────────────────────────── */}
         <Card>
           <SectionTitle icon="⚙️">How the Pipeline Works</SectionTitle>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-sm">
             {[
               { icon: '📨', label: 'Parse', sub: 'RFC 5322 headers, body, relay hops' },
               { icon: '🔐', label: 'Auth', sub: 'SPF · DKIM · DMARC · From alignment' },
@@ -268,21 +268,21 @@ export default function About() {
             ].map(item => (
               <div key={item.label}
                 className="p-3 rounded-lg bg-mfx-bg border border-mfx-border hover:border-mfx-accent/40 transition-colors">
-                <div className="text-2xl mb-1">{item.icon}</div>
-                <div className="font-bold text-mfx-text mb-0.5">{item.label}</div>
-                <div className="text-mfx-muted leading-tight">{item.sub}</div>
+                <div className="text-3xl mb-1.5">{item.icon}</div>
+                <div className="font-bold text-mfx-text mb-1">{item.label}</div>
+                <div className="text-mfx-muted leading-tight text-xs">{item.sub}</div>
               </div>
             ))}
           </div>
         </Card>
 
         {/* ── Footer ──────────────────────────────────────────────────────── */}
-        <div className="text-center text-xs text-mfx-muted py-6 border-t border-mfx-border space-y-1">
+        <div className="text-center text-sm text-mfx-muted py-8 border-t border-mfx-border space-y-1.5">
           <p>MailForenSIX v0.3.0 · Smart India Hackathon 2026 · Problem #26106</p>
           <p>Team CyberNexus ·{' '}
-            <a href="https://github.com/Stark6612/SIH_2026" target="_blank"
+            <a href="https://github.com/Stark6612/MailForenSIX" target="_blank"
               rel="noopener noreferrer" className="text-mfx-accent hover:underline">
-              github.com/Stark6612/SIH_2026
+              github.com/Stark6612/MailForenSIX
             </a>
           </p>
           <p className="text-mfx-border">

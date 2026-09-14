@@ -37,12 +37,12 @@ export default function TopBar({ airGapped, onToggleAirGap }) {
 
         {/* Logo */}
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-badge bg-mfx-accent flex items-center justify-center text-lg shadow-glow">
+          <div className="w-9 h-9 rounded-badge bg-mfx-accent flex items-center justify-center text-xl shadow-glow">
             📧
           </div>
           <div>
-            <span className="font-bold text-lg text-mfx-text tracking-tight">MailForen</span>
-            <span className="font-bold text-lg text-mfx-accent">SIX</span>
+            <span className="font-bold text-xl text-mfx-text tracking-tight">MailForen</span>
+            <span className="font-bold text-xl text-mfx-accent">SIX</span>
           </div>
           <span className="hidden sm:inline text-xs text-mfx-muted border border-mfx-border px-2 py-0.5 rounded-badge ml-2">
             AI Email Forensics · SIH 2026
