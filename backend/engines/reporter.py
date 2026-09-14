@@ -300,34 +300,7 @@ def generate_dossier(data: "AnalysisResponse") -> bytes:
             ["Created",         di.creation_date or "—"],
             ["Expires",         di.expiry_date or "—"],
             ["MX Valid",        "✓ Yes" if di.mx_valid else "✗ No"],
-            ["Privacy Proxy",   "⚠ Yes" if di.privacy_proxy else "No"],
-            ["Suspicion Score", f"{int((di.suspicion_score or 0)*100)}%"],
-        ]
-        for note in (di.notes or []):
-            di_rows.append(["Note", Paragraph(f"📌 {note}", SML)])
-
-        di_tbl = Table(di_rows, colWidths=[W*0.25, W*0.75])
-        di_tbl.setStyle(TableStyle([
-            ("BOX",          (0,0),(-1,-1), 0.5, c(*_BORDER)),
-            ("INNERGRID",    (0,0),(-1,-1), 0.3, c(*_BORDER)),
-            ("FONTSIZE",     (0,0),(-1,-1), 8),
-            ("FONTNAME",     (0,0),(0,-1),  "Helvetica-Bold"),
-            ("BACKGROUND",   (0,0),(0,-1),  c(*_LIGHT)),
-            ("TOPPADDING",   (0,0),(-1,-1), 4),
-            ("BOTTOMPADDING",(0,0),(-1,-1), 4),
-            ("LEFTPADDING",  (0,0),(-1,-1), 8),
-        ]))
-        story.append(di_tbl)
-        story.append(Spacer(1, 10))
-
-    # ── WARNINGS ───────────────────────────────────────────────────────────────
-    if data.warnings:
-        story.append(Paragraph("Analyst Warnings", H2))
-        for w in data.warnings:
-            story.append(Paragraph(f"⚠ {w}", sty("Warn", fontSize=8, textColor=c(*_WARN), leftIndent=6)))
-        story.append(Spacer(1, 10))
-
-    # ── IT ACT 2000 — contextual selection ────────────────────────────────────────
+            ["Privacy Proxy",       # ── IT ACT 2000 — contextual selection ────────────────────────────────────────
     story.append(Paragraph("Legal Reference — IT Act 2000 (Applicable Sections)", H2))
 
     _tier_v  = data.risk_tier.value   if hasattr(data.risk_tier,   "value") else str(data.risk_tier)
@@ -338,19 +311,29 @@ def generate_dossier(data: "AnalysisResponse") -> bytes:
     _warn_lc = [w.lower() for w in (data.warnings or [])]
     _spoof   = any("spoof" in w or "align" in w for w in _warn_lc)
 
-    it_applicable = [["Section", "Description", "Why Applicable"]]
+    it_hdr_s = sty("IT_HDR", fontSize=8, leading=10, fontName="Helvetica-Bold", textColor=c(*_TEXT))
+    it_sec_s = sty("IT_SEC", fontSize=8, leading=10, fontName="Helvetica-Bold", textColor=c(*_ACCENT))
+    it_dsc_s = sty("IT_DSC", fontSize=7.5, leading=10, textColor=c(*_TEXT))
+    it_why_s = sty("IT_WHY", fontSize=7.5, leading=10, textColor=c(*_MUTED))
+
+    it_applicable = [[
+        Paragraph("Section", it_hdr_s),
+        Paragraph("Description", it_hdr_s),
+        Paragraph("Why Applicable", it_hdr_s)
+    ]]
+
     # §43 — always baseline
     it_applicable.append([
-        "§43",
-        "Penalty and compensation for damage to computer, computer system, etc.",
-        "Baseline — any fraudulent email interaction with computer systems",
+        Paragraph("§43", it_sec_s),
+        Paragraph("Penalty and compensation for damage to computer, computer system, etc.", it_dsc_s),
+        Paragraph("Baseline — any fraudulent email interaction with computer systems", it_why_s),
     ])
     # §66 — deliberate offence, suspicious or higher risk
     if _tier_v in ("suspicious", "high", "critical"):
         it_applicable.append([
-            "§66",
-            "Computer related offences — imprisonment up to 3 years or fine up to Rs.5 lakh",
-            f"Risk tier: {_tier_v.upper()} — indicates deliberate fraudulent computer use",
+            Paragraph("§66", it_sec_s),
+            Paragraph("Computer related offences — imprisonment up to 3 years or fine up to Rs.5 lakh", it_dsc_s),
+            Paragraph(f"Risk tier: {_tier_v.upper()} — indicates deliberate fraudulent computer use", it_why_s),
         ])
     # §66C — identity theft, auth failure or impersonation
     if _dkim_v == "fail" or _dmarc_v == "fail" or _label_v == "impersonation" or _spoof:
@@ -358,9 +341,9 @@ def generate_dossier(data: "AnalysisResponse") -> bytes:
                    else "DMARC FAIL — domain policy violated, likely spoofed" if _dmarc_v == "fail"
                    else "Display-name or sender domain spoofing detected")
         it_applicable.append([
-            "§66C",
-            "Punishment for identity theft — imprisonment up to 3 years and fine up to Rs.1 lakh",
-            _why66c,
+            Paragraph("§66C", it_sec_s),
+            Paragraph("Punishment for identity theft — imprisonment up to 3 years and fine up to Rs.1 lakh", it_dsc_s),
+            Paragraph(_why66c, it_why_s),
         ])
     # §66D — cheating by personation; phishing, BEC, impersonation
     if _label_v in ("bec", "impersonation", "phishing"):
@@ -369,41 +352,38 @@ def generate_dossier(data: "AnalysisResponse") -> bytes:
                    else "Phishing via privacy-proxy domain" if _priv
                    else "Phishing email — personation via deceptive communication")
         it_applicable.append([
-            "§66D",
-            "Cheating by personation using computer resource — imprisonment up to 3 years",
-            _why66d,
+            Paragraph("§66D", it_sec_s),
+            Paragraph("Cheating by personation using computer resource — imprisonment up to 3 years", it_dsc_s),
+            Paragraph(_why66d, it_why_s),
         ])
 
-    it_tbl = Table(it_applicable, colWidths=[W*0.08, W*0.48, W*0.44])
+    it_tbl = Table(it_applicable, colWidths=[W*0.12, W*0.44, W*0.44])
     it_tbl.setStyle(TableStyle([
         ("BACKGROUND",    (0,0),(-1,0),  c(*_LIGHT)),
         ("BOX",           (0,0),(-1,-1), 0.5, c(*_BORDER)),
         ("INNERGRID",     (0,0),(-1,-1), 0.3, c(*_BORDER)),
-        ("FONTSIZE",      (0,0),(-1,-1), 8),
-        ("FONTNAME",      (0,0),(-1,0),  "Helvetica-Bold"),
-        ("FONTNAME",      (0,1),(0,-1),  "Helvetica-Bold"),
-        ("TEXTCOLOR",     (0,1),(0,-1),  c(*_ACCENT)),
-        ("TOPPADDING",    (0,0),(-1,-1), 4),
-        ("BOTTOMPADDING", (0,0),(-1,-1), 4),
-        ("LEFTPADDING",   (0,0),(-1,-1), 8),
+        ("TOPPADDING",    (0,0),(-1,-1), 5),
+        ("BOTTOMPADDING", (0,0),(-1,-1), 5),
+        ("LEFTPADDING",   (0,0),(-1,-1), 6),
+        ("RIGHTPADDING",  (0,0),(-1,-1), 6),
         ("ROWBACKGROUNDS",(0,1),(-1,-1), [c(1,1,1), c(*_LIGHT)]),
         ("VALIGN",        (0,0),(-1,-1), "TOP"),
     ]))
     story.append(it_tbl)
     story.append(Spacer(1, 10))
 
-
     # ── CHAIN OF CUSTODY ───────────────────────────────────────────────────────
     story.append(Paragraph("Chain of Custody", H2))
+    coc_val_s = sty("COC_VAL", fontSize=7.5, leading=10, textColor=c(*_TEXT))
     coc_rows = [
-        ["Tool",              "MailForenSIX v0.3.0 (SIH 2026)"],
-        ["Analysis Engine",   "XGBoost + TF-IDF (ngram 1-3) · LIME · Real-time Geo · WHOIS Domain Intel"],
-        ["Timestamp",         ts_ist],
-        ["Analysis UUID",     analysis_id],
+        ["Tool",              Paragraph("MailForenSIX v0.3.0 (SIH 2026)", coc_val_s)],
+        ["Analysis Engine",   Paragraph("XGBoost + TF-IDF (ngram 1-3) · LIME · Real-time Geo · WHOIS Domain Intel", coc_val_s)],
+        ["Timestamp",         Paragraph(ts_ist, coc_val_s)],
+        ["Analysis UUID",     Paragraph(analysis_id, coc_val_s)],
         ["Evidence SHA-256",  Paragraph(sha256, sty("COC", fontSize=6.5, fontName="Courier", textColor=c(*_ACCENT)))],
-        ["Mode",              "Air-gapped (offline)" if air_gapped else "Online (live APIs)"],
-        ["Risk Weights",      "Auth 30% · ML Intent 30% · Geo 20% · Domain 20%"],
-        ["Report Generated",  datetime.now(timezone.utc).strftime("%d %b %Y, %H:%M:%S UTC")],
+        ["Mode",              Paragraph("Air-gapped (offline)" if air_gapped else "Online (live APIs)", coc_val_s)],
+        ["Risk Weights",      Paragraph("Auth 30% · ML Intent 30% · Geo 20% · Domain 20%", coc_val_s)],
+        ["Report Generated",  Paragraph(datetime.now(timezone.utc).strftime("%d %b %Y, %H:%M:%S UTC"), coc_val_s)],
     ]
     coc_tbl = Table(coc_rows, colWidths=[W*0.22, W*0.78])
     coc_tbl.setStyle(TableStyle([
