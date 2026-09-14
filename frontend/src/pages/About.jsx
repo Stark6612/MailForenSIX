@@ -75,14 +75,14 @@ export default function About() {
 
       {/* ── Mini top bar ──────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 bg-mfx-bg/80 backdrop-blur-md border-b border-mfx-border">
-        <div className="max-w-[1100px] mx-auto px-6 h-14 flex items-center justify-between">
+        <div className="w-full px-8 h-14 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="w-8 h-8 rounded-badge bg-mfx-accent flex items-center justify-center text-lg shadow-glow">
+            <div className="w-9 h-9 rounded-badge bg-mfx-accent flex items-center justify-center text-xl shadow-glow">
               📧
             </div>
             <div>
-              <span className="font-bold text-lg text-mfx-text tracking-tight">MailForen</span>
-              <span className="font-bold text-lg text-mfx-accent">SIX</span>
+              <span className="font-bold text-xl text-mfx-text tracking-tight">MailForen</span>
+              <span className="font-bold text-xl text-mfx-accent">SIX</span>
             </div>
           </Link>
           <Link
@@ -94,7 +94,7 @@ export default function About() {
         </div>
       </header>
 
-      <main className="max-w-[1100px] mx-auto px-6 py-10 space-y-8">
+      <main className="w-full px-8 py-10 space-y-8">
 
         {/* ── Hero ──────────────────────────────────────────────────────── */}
         <div className="text-center space-y-3 pb-4">
@@ -127,15 +127,15 @@ export default function About() {
               For actual forensic investigations involving sensitive or confidential emails,
               <strong className="text-mfx-text"> run MailForenSIX locally</strong> using Docker —
               your data never leaves your machine.
-              See the <a href="https://github.com/Stark6612/SIH_2026" target="_blank"
+              See the <a href="https://github.com/Stark6612/MailForenSIX" target="_blank"
               rel="noopener noreferrer" className="text-mfx-accent hover:underline">GitHub repo</a> for
               local setup instructions.
             </p>
           </div>
         </div>
 
-        {/* ── Main grid ──────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* ── Main grid — 3 cols ──────────────────────────────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
           {/* ML Metrics */}
           <Card>
@@ -182,6 +182,33 @@ export default function About() {
                 Download a PDF dossier with chain-of-custody, IT Act 2000 legal mapping,
                 LIME explanations, and a Bitcoin-anchored SHA-256 evidence hash.
               </Step>
+            </div>
+          </Card>
+
+          {/* Quick Stats — 3rd column */}
+          <Card>
+            <SectionTitle icon="🏆">Quick Stats</SectionTitle>
+            <div className="space-y-3">
+              {[
+                { label: 'Training Emails', value: '83,497', icon: '📧' },
+                { label: 'Test Accuracy', value: '97.23%', icon: '🎯' },
+                { label: 'F1 Score', value: '97.34%', icon: '📐' },
+                { label: 'Classify Speed', value: '0.005 ms', icon: '⚡' },
+                { label: 'Pipeline Time', value: '< 15s', icon: '🚀' },
+                { label: 'Geo DB Size', value: '62 MB offline', icon: '🗺️' },
+                { label: 'Risk Signals', value: '4 engines', icon: '🔬' },
+                { label: 'IT Act Sections', value: '§43 · §66 · §66C · §66D', icon: '⚖️' },
+                { label: 'Evidence Anchor', value: 'Bitcoin blockchain', icon: '⛓️' },
+                { label: 'Docker Deploy', value: '1 command', icon: '🐳' },
+              ].map(s => (
+                <div key={s.label}
+                  className="flex items-center justify-between py-2 border-b border-mfx-border last:border-0">
+                  <span className="flex items-center gap-2 text-sm text-mfx-muted">
+                    <span>{s.icon}</span>{s.label}
+                  </span>
+                  <span className="text-sm font-bold text-mfx-accent font-mono">{s.value}</span>
+                </div>
+              ))}
             </div>
           </Card>
 

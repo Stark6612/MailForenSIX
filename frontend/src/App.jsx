@@ -114,7 +114,7 @@ export default function App() {
         })
       }} />
 
-      <main className="flex-1 px-6 py-4 max-w-[1600px] mx-auto w-full">
+      <main className="flex-1 px-6 py-4 w-full">
 
         {/* ── Upload zone + analyze trigger ──────────────────────────── */}
         <UploadZone

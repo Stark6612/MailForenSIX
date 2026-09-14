@@ -33,7 +33,7 @@ export default function TopBar({ airGapped, onToggleAirGap }) {
 
   return (
     <header className="sticky top-0 z-50 bg-mfx-bg/80 backdrop-blur-md border-b border-mfx-border">
-      <div className="max-w-[1600px] mx-auto px-6 h-14 flex items-center justify-between">
+      <div className="w-full px-6 h-14 flex items-center justify-between">
 
         {/* Logo */}
         <div className="flex items-center gap-3">
