@@ -11,23 +11,7 @@ import { Link } from 'react-router-dom'
 import { checkHealth } from '../lib/api'
 
 export default function TopBar({ airGapped, onToggleAirGap }) {
-  const [health, setHealth]   = useState(null)
-  const [isDark, setIsDark]   = useState(() => {
-    // On first render, read from localStorage (default = dark)
-    return localStorage.getItem('mfx-theme') !== 'light'
-  })
-
-  // Apply theme class to <html> root on mount + every toggle
-  useEffect(() => {
-    const root = document.documentElement
-    if (isDark) {
-      root.classList.remove('light')
-    } else {
-      root.classList.add('light')
-    }
-    localStorage.setItem('mfx-theme', isDark ? 'dark' : 'light')
-  }, [isDark])
-
+  const [health, setHealth] = useState(null)
   // Poll health every 30s
   useEffect(() => {
     let cancelled = false
@@ -131,18 +115,6 @@ export default function TopBar({ airGapped, onToggleAirGap }) {
             </a>
           </nav>
 
-          {/* ── Light / Dark toggle ───────────────────────────────────── */}
-          <button
-            id="theme-toggle"
-            onClick={() => setIsDark(p => !p)}
-            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-            aria-label="Toggle theme"
-            className="w-9 h-9 rounded-badge flex items-center justify-center text-lg
-                       border transition-colors duration-150 hover:border-mfx-accent"
-            style={{ background: 'var(--mfx-surface)', borderColor: 'var(--mfx-border)' }}
-          >
-            {isDark ? '☀️' : '🌙'}
-          </button>
         </div>
       </div>
     </header>

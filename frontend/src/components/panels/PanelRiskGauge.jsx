@@ -47,7 +47,7 @@ export default function PanelRiskGauge({ data, loading }) {
       <div className="flex items-start justify-between mb-1">
         <p className="panel-label">Risk Assessment</p>
         {warnCount > 0 && (
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-mfx-suspicious/20 text-mfx-suspicious font-semibold">
+          <span className="text-sm px-1.5 py-0.5 rounded-full bg-mfx-suspicious/20 text-mfx-suspicious font-semibold">
             {warnCount} warning{warnCount > 1 ? 's' : ''}
           </span>
         )}
@@ -88,7 +88,7 @@ export default function PanelRiskGauge({ data, loading }) {
       {data?.sender && (
         <>
           <div className="divider" />
-          <div className="text-xs space-y-1">
+          <div className="text-sm space-y-1">
             <div className="flex gap-1 items-start">
               <span className="text-mfx-muted shrink-0 w-14">From:</span>
               <span className="font-mono text-mfx-text truncate">{data.sender}</span>

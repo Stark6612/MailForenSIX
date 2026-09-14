@@ -26,7 +26,7 @@ function AuthRow({ protocol, status }) {
     >
       <div>
         <span className="text-sm font-mono font-semibold text-mfx-text">{protocol}</span>
-        <p className="text-[10px] text-mfx-muted mt-0.5 hidden sm:block">{PROTOCOL_DESC[protocol]}</p>
+        <p className="text-sm text-mfx-muted mt-0.5 hidden sm:block">{PROTOCOL_DESC[protocol]}</p>
       </div>
       <div className={`flex items-center gap-1.5 text-sm font-bold ${s.cls}`}>
         <span className="text-base">{s.icon}</span>
@@ -47,8 +47,8 @@ export default function PanelAuthMatrix({ data, loading }) {
     <div className="panel animate-slide-up" id="panel-auth-matrix">
       <div className="flex items-center justify-between mb-3">
         <p className="panel-label mb-0">Authentication Matrix</p>
-        {allPass && <span className="badge badge-safe text-[10px]">✓ All Pass</span>}
-        {anyFail && <span className="badge badge-critical text-[10px]">⚠ Auth Failure</span>}
+        {allPass && <span className="badge badge-safe text-xs">✓ All Pass</span>}
+        {anyFail && <span className="badge badge-critical text-xs">⚠ Auth Failure</span>}
       </div>
 
       <div className="space-y-1">
@@ -59,8 +59,8 @@ export default function PanelAuthMatrix({ data, loading }) {
 
       {auth.details && (
         <div className="mt-3 p-2 bg-mfx-bg/60 rounded-md border border-mfx-border">
-          <p className="text-[10px] font-semibold text-mfx-muted uppercase tracking-wide mb-1">Source Details</p>
-          <p className="text-xs text-mfx-text leading-relaxed break-words">{auth.details}</p>
+          <p className="text-sm font-semibold text-mfx-muted uppercase tracking-wide mb-1">Source Details</p>
+          <p className="text-sm text-mfx-text leading-relaxed break-words">{auth.details}</p>
         </div>
       )}
 

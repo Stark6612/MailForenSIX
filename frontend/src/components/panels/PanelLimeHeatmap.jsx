@@ -52,7 +52,7 @@ export default function PanelLimeHeatmap({ data, loading }) {
     <div className="panel animate-slide-up" id="panel-lime-heatmap">
       <div className="flex items-center justify-between mb-3">
         <p className="panel-label mb-0">AI Explanation — LIME</p>
-        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
+        <span className={`text-sm px-1.5 py-0.5 rounded-full font-semibold ${
           isMLModel ? 'bg-mfx-safe/20 text-mfx-safe' : 'bg-mfx-suspicious/20 text-mfx-suspicious'
         }`}>
           {isMLModel ? '🤖 XGBoost+LIME' : '📐 Heuristic'}
@@ -60,7 +60,7 @@ export default function PanelLimeHeatmap({ data, loading }) {
       </div>
 
       {sentences.length === 0 ? (
-        <p className="text-xs text-mfx-muted">No explanation available for this email.</p>
+        <p className="text-sm text-mfx-muted">No explanation available for this email.</p>
       ) : (
         <div className="space-y-1 text-sm leading-relaxed">
           {sentences.map((s, i) => (

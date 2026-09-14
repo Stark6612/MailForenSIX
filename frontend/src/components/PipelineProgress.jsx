@@ -13,7 +13,7 @@ export default function PipelineProgress({ stage }) {
         {STAGES.map((s, i) => (
           <div key={s} className="flex items-center gap-1.5">
             <span
-              className={`text-xs px-2 py-0.5 rounded-badge border transition-all duration-300
+              className={`text-sm px-2 py-0.5 rounded-badge border transition-all duration-300
                 ${stage === s
                   ? 'bg-mfx-accent/20 border-mfx-accent text-mfx-accent font-semibold shadow-glow animate-pulse'
                   : STAGES.indexOf(stage) > i

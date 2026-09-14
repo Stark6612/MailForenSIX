@@ -158,17 +158,17 @@ export default function App() {
 
         {/* ── Idle state hint ─────────────────────────────────────────── */}
         {status === STATUS.IDLE && (
-          <div className="mt-16 flex flex-col items-center gap-3 text-mfx-muted animate-fade-in">
-            <div className="text-5xl">🔍</div>
-            <p className="text-lg font-semibold text-mfx-text">Upload a suspicious email to begin analysis</p>
-            <p className="text-sm">Supports <code className="text-mfx-accent">.eml</code> files or raw header paste</p>
-            <div className="flex gap-4 mt-2 text-xs text-mfx-muted">
-              <kbd className="px-2 py-1 bg-mfx-surface border border-mfx-border rounded-badge">Ctrl+Enter</kbd>
-              <span>to analyze</span>
-              <kbd className="px-2 py-1 bg-mfx-surface border border-mfx-border rounded-badge">Ctrl+E</kbd>
-              <span>to export</span>
-              <kbd className="px-2 py-1 bg-mfx-surface border border-mfx-border rounded-badge">Space</kbd>
-              <span>air-gap toggle</span>
+          <div className="mt-16 flex flex-col items-center gap-4 text-mfx-muted animate-fade-in">
+            <div className="text-6xl">🔍</div>
+            <p className="text-xl font-semibold text-mfx-text">Upload a suspicious email to begin analysis</p>
+            <p className="text-base">Supports <code className="text-mfx-accent">.eml</code> files or raw header paste</p>
+            <div className="flex gap-5 mt-3 text-sm text-mfx-muted flex-wrap justify-center">
+              <kbd className="px-3 py-1.5 bg-mfx-surface border border-mfx-border rounded-badge font-mono">Ctrl+Enter</kbd>
+              <span className="self-center">to analyze</span>
+              <kbd className="px-3 py-1.5 bg-mfx-surface border border-mfx-border rounded-badge font-mono">Ctrl+E</kbd>
+              <span className="self-center">to export</span>
+              <kbd className="px-3 py-1.5 bg-mfx-surface border border-mfx-border rounded-badge font-mono">Space</kbd>
+              <span className="self-center">air-gap toggle</span>
             </div>
           </div>
         )}

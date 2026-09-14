@@ -80,16 +80,16 @@ export default function UploadZone({
             <span className="text-2xl">📎</span>
             <div>
               <p className="font-semibold text-mfx-text text-sm">{emlFile.name}</p>
-              <p className="text-xs text-mfx-muted">{(emlFile.size / 1024).toFixed(1)} KB</p>
+              <p className="text-sm text-mfx-muted">{(emlFile.size / 1024).toFixed(1)} KB</p>
             </div>
           </div>
         ) : (
           <>
-            <span className="text-3xl">{dragging ? '📥' : '📂'}</span>
-            <p className="text-sm font-medium text-mfx-text">
+            <span className="text-4xl">{dragging ? '📥' : '📂'}</span>
+            <p className="text-base font-semibold text-mfx-text">
               {dragging ? 'Release to upload' : 'Drop your .eml file here'}
             </p>
-            <p className="text-xs text-mfx-muted">or click to browse · max 10 MB</p>
+            <p className="text-sm text-mfx-muted">or click to browse · max 10 MB</p>
           </>
         )}
       </div>
@@ -98,7 +98,7 @@ export default function UploadZone({
       <div className="flex items-center gap-2">
         <button
           onClick={() => setShowPaste(p => !p)}
-          className="text-xs text-mfx-muted hover:text-mfx-accent transition-colors"
+          className="text-sm text-mfx-muted hover:text-mfx-accent transition-colors"
           id="toggle-paste-btn"
         >
           {showPaste ? '▾ Hide paste area' : '▸ Or paste raw email source'}
@@ -106,7 +106,7 @@ export default function UploadZone({
         {hasInput && (
           <button
             onClick={handleClear}
-            className="text-xs text-mfx-muted hover:text-mfx-critical transition-colors ml-auto"
+            className="text-sm text-mfx-muted hover:text-mfx-critical transition-colors ml-auto"
             id="clear-input-btn"
           >
             ✕ Clear
@@ -147,7 +147,7 @@ export default function UploadZone({
         </button>
 
         {hasInput && !isLoading && (
-          <span className="text-xs text-mfx-muted">
+          <span className="text-sm text-mfx-muted">
             {emlFile ? `${emlFile.name}` : `${rawText.trim().split('\n').length} lines pasted`}
           </span>
         )}

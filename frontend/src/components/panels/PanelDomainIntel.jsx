@@ -29,7 +29,7 @@ export default function PanelDomainIntel({ data, loading }) {
       <div className="flex items-start justify-between mb-3">
         <p className="panel-label mb-0">Domain Intelligence</p>
         {suspPct >= 50 && (
-          <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
+          <span className={`text-sm px-1.5 py-0.5 rounded-full font-semibold ${
             suspPct >= 70 ? 'bg-mfx-critical/20 text-mfx-critical' : 'bg-mfx-suspicious/20 text-mfx-suspicious'
           }`}>
             ⚠ Suspicious
@@ -75,7 +75,7 @@ export default function PanelDomainIntel({ data, loading }) {
       {d.notes?.length > 0 && (
         <ul className="mt-3 space-y-1">
           {d.notes.map((n, i) => (
-            <li key={i} className={`text-xs flex gap-1.5 ${n.includes('high') || n.includes('suspicious') || n.includes('risk') ? 'text-mfx-suspicious' : 'text-mfx-muted'}`}>
+            <li key={i} className={`text-sm flex gap-1.5 ${n.includes('high') || n.includes('suspicious') || n.includes('risk') ? 'text-mfx-suspicious' : 'text-mfx-muted'}`}>
               <span className="shrink-0">•</span>{n}
             </li>
           ))}
@@ -91,7 +91,7 @@ function Row({ label, value, warn = false, alert = null }) {
       <span className="text-mfx-muted shrink-0">{label}</span>
       <div className="text-right">
         <span className={`font-medium ${warn ? 'text-mfx-suspicious' : 'text-mfx-text'}`}>{value}</span>
-        {alert && <p className="text-[10px] text-mfx-critical mt-0.5">{alert}</p>}
+        {alert && <p className="text-sm text-mfx-critical mt-0.5">{alert}</p>}
       </div>
     </div>
   )

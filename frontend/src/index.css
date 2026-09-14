@@ -6,7 +6,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Theme variables — dark (default) ───────────────────────────────────── */
+/* ── Theme variables — dark only ───────────────────────────────────────── */
 :root {
   --mfx-bg:         #0F172A;
   --mfx-surface:    #1E293B;
@@ -14,16 +14,6 @@
   --mfx-text:       #F8FAFC;
   --mfx-muted:      #94A3B8;
   --mfx-accent:     #3B82F6;
-}
-
-/* ── Light mode overrides ───────────────────────────────────────────────── */
-:root.light {
-  --mfx-bg:         #F1F5F9;
-  --mfx-surface:    #FFFFFF;
-  --mfx-border:     #CBD5E1;
-  --mfx-text:       #0F172A;
-  --mfx-muted:      #64748B;
-  --mfx-accent:     #2563EB;
 }
 
 /* ── Base resets ─────────────────────────────────────────────────────────── */
@@ -96,7 +86,7 @@
 
   /* Section label */
   .panel-label {
-    @apply text-xs font-semibold uppercase tracking-widest text-mfx-muted mb-3;
+    @apply text-sm font-semibold uppercase tracking-widest text-mfx-muted mb-3;
   }
 
   /* Divider */
@@ -115,6 +105,3 @@
   @apply rounded-panel;
   font-family: inherit;
 }
-
-/* ── Light mode: invert Leaflet dark tiles ─────────────────────────────── */
-:root.light .leaflet-tile { filter: invert(1) hue-rotate(180deg) brightness(0.9); }

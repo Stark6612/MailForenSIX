@@ -181,7 +181,7 @@ export default function PanelDossier({ data, loading, airGapped }) {
         <span>{label}</span>
         <span className="opacity-60">·</span>
         <code
-          className="font-mono text-[10px] opacity-80 cursor-pointer hover:opacity-100"
+          className="font-mono text-xs opacity-80 cursor-pointer hover:opacity-100"
           title={anchorInfo.tx_id}
           onClick={handleCopyTxId}
         >
@@ -204,10 +204,10 @@ export default function PanelDossier({ data, loading, airGapped }) {
 
           {/* SHA-256 */}
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-mfx-muted shrink-0">SHA-256:</span>
+            <span className="text-sm text-mfx-muted shrink-0">SHA-256:</span>
             <code
               onClick={handleCopyHash}
-              className="text-xs font-mono text-mfx-accent cursor-pointer hover:underline hover:text-mfx-accent/80 truncate max-w-[320px] sm:max-w-[480px] transition-colors"
+              className="text-sm font-mono text-mfx-accent cursor-pointer hover:underline hover:text-mfx-accent/80 truncate max-w-[320px] sm:max-w-[480px] transition-colors"
               title="Click to copy full hash"
               id="sha256-hash-display"
             >
@@ -215,7 +215,7 @@ export default function PanelDossier({ data, loading, airGapped }) {
             </code>
             <button
               onClick={handleCopyHash}
-              className="text-[10px] px-1.5 py-0.5 rounded bg-mfx-accent/10 text-mfx-accent hover:bg-mfx-accent/20 transition-colors font-semibold"
+              className="text-sm px-1.5 py-0.5 rounded bg-mfx-accent/10 text-mfx-accent hover:bg-mfx-accent/20 transition-colors font-semibold"
               id="copy-hash-inline-btn"
             >
               copy
@@ -232,13 +232,13 @@ export default function PanelDossier({ data, loading, airGapped }) {
             </div>
             <span>·</span>
             <span>Analyzed: {ts}</span>
-            {analysisId && <><span>·</span><span className="font-mono text-[10px]">ID: {analysisId.slice(0, 8)}…</span></>}
+            {analysisId && <><span>·</span><span className="font-mono text-xs">ID: {analysisId.slice(0, 8)}…</span></>}
             {forensic?.air_gapped && <><span>·</span><span className="text-mfx-suspicious">Air-gapped mode</span></>}
           </div>
 
           {/* IT Act references — contextual, data-driven */}
           <div className="space-y-1.5">
-            <p className="text-[10px] text-mfx-muted uppercase tracking-wide font-semibold">Applicable Legal Sections</p>
+            <p className="text-sm text-mfx-muted uppercase tracking-wide font-semibold">Applicable Legal Sections</p>
             <div className="flex flex-wrap gap-2">
               {getApplicableSections(data).map(ref => (
                 <div
@@ -259,7 +259,7 @@ export default function PanelDossier({ data, loading, airGapped }) {
         {/* Right — risk weights legend + actions */}
         <div className="flex flex-col gap-3 shrink-0">
           {/* Engine weight legend */}
-          <div className="text-[10px] text-mfx-muted space-y-0.5 bg-mfx-bg/60 rounded-md p-2 border border-mfx-border min-w-[140px]">
+          <div className="text-sm text-mfx-muted space-y-0.5 bg-mfx-bg/60 rounded-md p-2 border border-mfx-border min-w-[140px]">
             <p className="font-semibold text-mfx-muted/80 uppercase tracking-wide mb-1">Risk Weights</p>
             {[['Auth', '30%'], ['ML Intent', '30%'], ['Geo', '20%'], ['Domain', '20%']].map(([k, v]) => (
               <div key={k} className="flex justify-between gap-3">
@@ -283,7 +283,7 @@ export default function PanelDossier({ data, loading, airGapped }) {
               >
                 {exporting
                   ? <><span className="animate-spin inline-block">⏳</span> Generating…</>
-                  : <>📄 Export <span className="opacity-50 text-[10px] ml-1">Ctrl+E</span></>
+                  : <>📄 Export <span className="opacity-50 text-xs ml-1">Ctrl+E</span></>
                 }
               </button>
             </div>
@@ -312,7 +312,7 @@ export default function PanelDossier({ data, loading, airGapped }) {
       {data?.warnings?.length > 0 && (
         <div className="mt-3 pt-3 border-t border-mfx-border space-y-1">
           {data.warnings.map((w, i) => (
-            <p key={i} className="text-xs text-mfx-suspicious flex items-start gap-1.5">
+            <p key={i} className="text-sm text-mfx-suspicious flex items-start gap-1.5">
               <span>⚠</span> {w}
             </p>
           ))}

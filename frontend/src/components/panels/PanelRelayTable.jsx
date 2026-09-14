@@ -28,12 +28,12 @@ export default function PanelRelayTable({ data, loading }) {
         <p className="panel-label mb-0">Email Relay Path</p>
         <div className="flex gap-1.5">
           {maskedCount > 0 && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-mfx-suspicious/20 text-mfx-suspicious font-semibold">
+            <span className="text-sm px-1.5 py-0.5 rounded-full bg-mfx-suspicious/20 text-mfx-suspicious font-semibold">
               {maskedCount} masked
             </span>
           )}
           {vpnCount > 0 && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-mfx-high/20 text-mfx-high font-semibold">
+            <span className="text-sm px-1.5 py-0.5 rounded-full bg-mfx-high/20 text-mfx-high font-semibold">
               {vpnCount} VPN
             </span>
           )}
@@ -41,7 +41,7 @@ export default function PanelRelayTable({ data, loading }) {
       </div>
 
       {hops.length === 0 ? (
-        <p className="text-xs text-mfx-muted">No relay hops extracted — headers may be minimal.</p>
+        <p className="text-sm text-mfx-muted">No relay hops extracted — headers may be minimal.</p>
       ) : (
         <div className="overflow-x-auto -mx-1">
           <table className="w-full text-xs min-w-[380px]">
@@ -120,7 +120,7 @@ export default function PanelRelayTable({ data, loading }) {
       })()}
 
       <div className="divider" />
-      <p className="text-xs text-mfx-muted">
+      <p className="text-sm text-mfx-muted">
         {hops.length} hop{hops.length !== 1 ? 's' : ''} total ·{' '}
         {maskedCount} masked · {vpnCount} VPN/proxy · Click row to expand
       </p>
