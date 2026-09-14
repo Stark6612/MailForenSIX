@@ -39,5 +39,6 @@ passlib[bcrypt]==1.7.4
 
 # ── Utilities ─────────────────────────────────────────────────────────────────────
 pydantic==2.9.2
+pydantic-settings>=2.5.0
 python-dotenv==1.0.1
 pyarrow>=17.0.0     # Parquet I/O for dataset preparation
