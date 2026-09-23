@@ -3,13 +3,12 @@ services:
     name: mailforensix-backend
     runtime: python
     rootDir: backend
-    buildCommand: >
-      pip install -r requirements.txt &&
-      python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
+    buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.0
       - key: AIR_GAPPED
         value: "false"
-      # DISABLE_ST_MODEL intentionally NOT set -- model is downloaded at build time above.
+      - key: DISABLE_ST_MODEL
+        value: "1"

@@ -11,12 +11,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Pre-download sentence-transformer model at build time (baked into image).
-# Avoids per-request HuggingFace download which causes OOM on free-tier instances.
-RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
-
 COPY . .
 
+ENV DISABLE_ST_MODEL=1
 ENV PORT=8000
 EXPOSE 8000
 

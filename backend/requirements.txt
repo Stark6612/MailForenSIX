@@ -43,8 +43,8 @@ pydantic-settings>=2.5.0
 python-dotenv==1.0.1
 pyarrow>=17.0.0     # Parquet I/O for dataset preparation
 
-# Mode 2 Campaign Intelligence
-sentence-transformers>=2.7.0
+# Mode 2 Campaign Intelligence (uses lightweight TF-IDF+SVD embedder; uncomment for local transformer usage)
+# sentence-transformers>=2.7.0
 umap-learn>=0.5.6
 hdbscan>=0.8.38
 stix2>=3.0.1
