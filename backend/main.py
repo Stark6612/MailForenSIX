@@ -35,15 +35,13 @@ async def lifespan(app: FastAPI):
             "Run: python scripts/train_classifier.py"
         )
 
-    # Mode 2 — Preload DistilBERT embedding model (non-blocking)
-    try:
-        from engines.embedder import get_model
-        get_model()
-        logger.info("[startup] DistilBERT embedder ready.")
-    except Exception as e:
-        logger.warning(f"[startup] DistilBERT embedder not loaded: {e}")
+    # Mode 2 — DistilBERT embedding model is loaded LAZILY on first campaign request.
+    # Do NOT preload here: sentence-transformers + PyTorch consume ~400 MB which
+    # exceeds Render's 512 MB free-tier limit and causes OOM at startup.
+    logger.info("[startup] Mode 2 embedder will lazy-load on first /campaign/analyze request.")
 
     yield
+
 
 
 app = FastAPI(
