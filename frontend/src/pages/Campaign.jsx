@@ -1,4 +1,4 @@
-﻿import React, { useState, useCallback, useRef, useEffect } from 'react'
+import React, { useState, useCallback, useRef, useEffect } from 'react'
 import { submitCampaign, pollCampaignResults, exportCampaign, adjustCampaignCluster } from '../lib/api'
 
 /* ── Constants ── */
@@ -180,13 +180,23 @@ export default function Campaign() {
   const [error,        setError]       = useState(null)
   const [tlp,          setTlp]         = useState('amber')
   const [dragOver,     setDragOver]    = useState(false)
-  const pollRef = useRef(null)
+  const pollRef    = useRef(null)
+  const pollStart  = useRef(null)
   const fileInputRef = useRef(null)
+  const POLL_TIMEOUT_MS = 5 * 60 * 1000  // 5 minutes
 
-  /* Polling */
+  /* Polling — stops after 5 minutes with a clear error */
   useEffect(() => {
     if (!campaignId || status === 'complete' || status === 'error') return
+    pollStart.current = Date.now()
     pollRef.current = setInterval(async () => {
+      // Timeout guard
+      if (Date.now() - pollStart.current > POLL_TIMEOUT_MS) {
+        clearInterval(pollRef.current)
+        setStatus('error')
+        setError('Analysis timed out after 5 minutes. The embedding model may still be loading on the server — please try again in a minute.')
+        return
+      }
       try {
         const r = await pollCampaignResults(campaignId)
         setResults(r)

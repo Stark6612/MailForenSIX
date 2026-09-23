@@ -10,3 +10,7 @@ services:
         value: 3.12.0
       - key: AIR_GAPPED
         value: "false"
+      - key: DISABLE_ST_MODEL
+        value: "1"
+        # Prevents HuggingFace download on Render free tier (512MB RAM limit).
+        # Mode 2 uses TF-IDF+SVD fallback embeddings instead (no download needed).
