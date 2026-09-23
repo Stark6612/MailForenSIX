@@ -3,14 +3,13 @@ services:
     name: mailforensix-backend
     runtime: python
     rootDir: backend
-    buildCommand: pip install -r requirements.txt
+    buildCommand: >
+      pip install -r requirements.txt &&
+      python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.0
       - key: AIR_GAPPED
         value: "false"
-      - key: DISABLE_ST_MODEL
-        value: "1"
-        # Prevents HuggingFace download on Render free tier (512MB RAM limit).
-        # Mode 2 uses TF-IDF+SVD fallback embeddings instead (no download needed).
+      # DISABLE_ST_MODEL intentionally NOT set -- model is downloaded at build time above.
