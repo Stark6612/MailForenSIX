@@ -1,0 +1,33 @@
+{
+  "target_latency_s": 60.0,
+  "test_emails": 3,
+  "results": [
+    {
+      "file": "email_01_C1.eml",
+      "latency_s": 0.794,
+      "passed": true,
+      "risk": 15,
+      "intent": "suspicious",
+      "certin": "No Incident - Email appears legitimate"
+    },
+    {
+      "file": "email_02_C1.eml",
+      "latency_s": 0.0,
+      "passed": true,
+      "risk": 8,
+      "intent": "safe",
+      "certin": "No Incident - Email appears legitimate"
+    },
+    {
+      "file": "email_03_C1.eml",
+      "latency_s": 0.0,
+      "passed": true,
+      "risk": 15,
+      "intent": "suspicious",
+      "certin": "No Incident - Email appears legitimate"
+    }
+  ],
+  "avg_latency_s": 0.265,
+  "all_targets_met": true,
+  "note": "Air-gapped mode tested (no network calls). Connected mode adds geo+WHOIS latency (~5-10s)."
+}

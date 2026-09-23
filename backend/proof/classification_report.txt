@@ -1,0 +1,11 @@
+MailForensix -- TF-IDF + XGBoost Classification Report
+Training rows: 82,688  |  Test rows: 20,672
+
+              precision    recall  f1-score   support
+
+         ham       0.96      0.96      0.96      9915
+    phishing       0.96      0.96      0.96     10757
+
+    accuracy                           0.96     20672
+   macro avg       0.96      0.96      0.96     20672
+weighted avg       0.96      0.96      0.96     20672

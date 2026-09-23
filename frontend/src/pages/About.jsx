@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+﻿import { Link } from 'react-router-dom'
 import StrokeText from '../components/animations/StrokeText'
 import SpotlightCard from '../components/animations/SpotlightCard'
 import CountUp from '../components/animations/CountUp'
@@ -177,15 +177,17 @@ export default function About() {
           <Card>
             <SectionTitle icon="📊">Model Performance</SectionTitle>
             <p className="text-sm text-mfx-muted mb-5">
-              Trained on <strong className="text-mfx-text">83,497 emails</strong> (43,040 phishing · 40,457 ham).
-              Evaluated on a <strong className="text-mfx-text">16,700-email stratified hold-out set</strong> (20%, random_state=42).
+              Trained on <strong className="text-mfx-text">103,360 emails</strong> (53,785 phishing · 49,575 ham).
+              Evaluated on a <strong className="text-mfx-text">20,672-email stratified hold-out set</strong> (20%, random_state=42).
             </p>
-            <MetricRow label="Accuracy"  value="97.23%" sub="target ≥ 95%" pass={true} />
+            <MetricRow label="Accuracy"  value="96.16%" sub="target ≥ 95%" pass={true} />
             <MetricRow label="Precision" value="96.16%" sub="target ≥ 92%" pass={true} />
-            <MetricRow label="Recall"    value="98.56%" sub="target ≥ 90%" pass={true} />
-            <MetricRow label="F1 Score"  value="97.34%" sub="target ≥ 91%" pass={true} />
+            <MetricRow label="Recall"    value="96.20%" sub="target ≥ 90%" pass={true} />
+            <MetricRow label="F1 Score"  value="96.31%" sub="target ≥ 91%" pass={true} />
             <MetricRow label="Classify latency" value="0.005 ms" sub="per email, CPU" pass={true} />
-            <MetricRow label="Pipeline latency" value="< 15s" sub="typical, online mode" pass={true} />
+            <MetricRow label="Pipeline latency (air-gapped)" value="~10 ms" sub="local, no DNS/geo calls" pass={true} />
+            <MetricRow label="Pipeline latency (live DNS)" value="4 – 9s" sub="local server, real DNS + ip-api.com" pass={true} />
+            <MetricRow label="Pipeline latency (deployed)" value="8 – 20s" sub="cloud VPS, live DNS + geo, network RTT" pass={true} />
             <div className="mt-5 text-sm text-mfx-muted bg-mfx-bg rounded p-4 border border-mfx-border">
               <strong className="text-mfx-text">Stack:</strong> XGBoost (200 trees, depth 6) ·
               TF-IDF (ngram 1–3, 50k features) · LIME sentence-level explanations ·
@@ -207,8 +209,7 @@ export default function About() {
                 The tool accepts both full raw emails (with body) and header-only pastes.
               </Step>
               <Step n="3" title="Click Analyze (or Ctrl+Enter)">
-                The 4-engine pipeline runs in parallel: Auth validation → ML classification →
-                IP geolocation → Domain intelligence. Takes 5–30 seconds.
+                The 7-engine pipeline runs in parallel: Auth validation → ML classification → IP geolocation → Domain intelligence. Air-gapped: ~10 ms. Live DNS (local): 4–9s. Deployed (cloud): 8–20s.
               </Step>
               <Step n="4" title="Review the 7-panel dashboard">
                 Risk gauge, SPF/DKIM/DMARC matrix, LIME sentence highlights,
@@ -227,18 +228,21 @@ export default function About() {
             <div className="space-y-3">
               {[
                 { label: 'Training Emails', value: '83,497', icon: '📧',
-                  animated: <CountUp from={0} to={83497} separator="," duration={1.8} /> },
+                  animated: <CountUp from={0} to={103360} separator="," duration={1.8} /> },
                 { label: 'Test Accuracy', value: '97.23%', icon: '🎯',
-                  animated: <><CountUp from={0} to={97.23} decimals={2} duration={1.5} />%</> },
+                  animated: <><CountUp from={0} to={96.16} decimals={2} duration={1.5} />%</> },
                 { label: 'F1 Score', value: '97.34%', icon: '📐',
-                  animated: <><CountUp from={0} to={97.34} decimals={2} duration={1.5} />%</> },
+                  animated: <><CountUp from={0} to={96.31} decimals={2} duration={1.5} />%</> },
                 { label: 'Classify Speed', value: '0.005 ms', icon: '⚡' },
-                { label: 'Pipeline Time', value: '< 15s', icon: '🚀' },
+                { label: 'Pipeline (air-gap)', value: '~10 ms', icon: '⚡' },
+                { label: 'Pipeline (live DNS)', value: '4 – 9s', icon: '🚀' },
+                { label: 'Pipeline (deployed)', value: '8 – 20s', icon: '☁️' },
                 { label: 'Geo DB Size', value: '62 MB offline', icon: '🗺️' },
-                { label: 'Risk Signals', value: '4 engines', icon: '🔬',
-                  animated: <><CountUp from={0} to={4} duration={1} /> engines</> },
+                { label: 'Risk Signals', value: '7 engines', icon: '🔬',
+                  animated: <><CountUp from={0} to={7} duration={1} /> engines</> },
                 { label: 'IT Act Sections', value: '§43 · §66 · §66C · §66D', icon: '⚖️' },
                 { label: 'Evidence Anchor', value: 'Bitcoin blockchain', icon: '⛓️' },
+                { label: 'Campaign ARI', value: '0.8806', icon: '🧩' },
                 { label: 'Docker Deploy', value: '1 command', icon: '🐳' },
               ].map(s => (
                 <div key={s.label}
@@ -272,18 +276,15 @@ export default function About() {
               Not just a verdict — the model highlights which specific sentences triggered the
               phishing classification. An analyst can cite exact evidence, not just a score.
             </NoveltyCard>
-            <NoveltyCard icon="🗺️" title="Provider Masking Detection">
-              Explicitly flags when Gmail, Outlook, or SendGrid strip the originating IP —
-              surfacing this as an investigative signal rather than silently losing the trail.
+            <NoveltyCard icon="🗺️" title="CERT-In Incident Classification">
+              Every analysis is automatically classified into CERT-In 2022 incident categories (Phishing, BEC, Malware, Spam) with severity rating and statutory reference — mandatory for Indian institutional reporting.
             </NoveltyCard>
             <NoveltyCard icon="🔌" title="True Air-Gap Mode">
-              Runs fully offline — MaxMind GeoLite2 (local 62 MB DB) + SQLite cache.
+              Runs fully offline — MaxMind GeoLite2 (62 MB DB) + SQLite SPF/DMARC cache (52 Indian institutional domains pre-loaded) + URLhaus 5,728 malicious domain blacklist.
               Designed for classified environments where email evidence cannot leave the machine.
             </NoveltyCard>
-            <NoveltyCard icon="🧩" title="Unified Forensic Pipeline">
-              No single existing tool combines ML intent classification + auth validation +
-              multi-hop geo + domain WHOIS + blockchain anchoring + legal mapping in one
-              drag-and-drop workflow under 60 seconds.
+            <NoveltyCard icon="🧩" title="Mode 2: Campaign Clustering">
+              Batch-analyze up to 200 emails at once. UMAP + HDBSCAN clustering groups them by campaign — ARI 0.88 on synthetic corpus. Exports STIX 2.1, Sigma, Suricata, Postfix, Exchange rules, and DNSBL blocklists.
             </NoveltyCard>
           </div>
         </Card>
@@ -345,7 +346,7 @@ export default function About() {
 
         {/* ── Footer ──────────────────────────────────────────────────────── */}
         <div className="text-center text-sm text-mfx-muted py-8 border-t border-mfx-border space-y-1.5">
-          <p>MailForenSIX v0.3.0 · Smart India Hackathon 2026 · Problem #26106</p>
+          <p>MailForenSIX v0.4.0 · Smart India Hackathon 2026 · Problem #26106</p>
           <p>Team CyberNexus ·{' '}
             <a href="https://github.com/Stark6612/MailForenSIX" target="_blank"
               rel="noopener noreferrer" className="text-mfx-accent hover:underline">
@@ -353,7 +354,7 @@ export default function About() {
             </a>
           </p>
           <p className="text-mfx-border">
-            Trained on 83,497 emails · XGBoost 97.23% accuracy · Forensic + Legal + Blockchain
+            Trained on 103,360 emails · XGBoost 96.16% accuracy · Forensic + Legal + Blockchain
           </p>
         </div>
 

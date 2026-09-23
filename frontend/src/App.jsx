@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+﻿import { useState, useEffect, useRef, useCallback } from 'react'
 import { Toaster, toast } from 'react-hot-toast'
 import { useAnalysis, STATUS } from './hooks/useAnalysis'
 import { exportPDF } from './lib/api'
@@ -15,11 +15,13 @@ import PanelDossier from './components/panels/PanelDossier'
 import PipelineProgress from './components/PipelineProgress'
 import ErrorBanner from './components/ErrorBanner'
 import ScrollReveal from './components/animations/ScrollReveal'
+import Campaign from './pages/Campaign'
 
 export default function App() {
   const [airGapped, setAirGapped] = useState(false)
   const [emlFile,   setEmlFile]   = useState(null)
   const [rawText,   setRawText]   = useState('')
+  const [page,      setPage]      = useState('triage')  // 'triage' | 'campaign'
   const analyzeRef   = useRef(null)
   const timeoutRef   = useRef(null)    // Phase 4 — 60s timeout guard
   const exportingRef = useRef(false)   // prevent double-trigger
@@ -115,7 +117,22 @@ export default function App() {
         })
       }} />
 
-      <main className="flex-1 px-6 py-4 w-full">
+      {/* Mode tabs */}
+      <div style={{ display: "flex", gap: 0, borderBottom: "1px solid rgba(255,255,255,0.06)", background: "#0f0f1a" }}>
+        {[{key:"triage",label:"Mode 1 - Email Triage"},{key:"campaign",label:"Mode 2 - Campaign Intelligence"}].map(tab => (
+          <button key={tab.key} onClick={() => setPage(tab.key)} style={{
+            padding: "0.5rem 1.25rem", fontSize: "0.78rem", fontWeight: 600,
+            background: "transparent", border: "none", cursor: "pointer",
+            color: page === tab.key ? "#818cf8" : "#6b7280",
+            borderBottom: page === tab.key ? "2px solid #818cf8" : "2px solid transparent",
+            transition: "all 0.15s",
+          }}>{tab.label}</button>
+        ))}
+      </div>
+
+      {page === "campaign" && <Campaign />}
+
+      {page !== "campaign" && <main className="flex-1 px-6 py-4 w-full">
 
         {/* ── Upload zone + analyze trigger ──────────────────────────── */}
         <UploadZone
@@ -213,7 +230,7 @@ export default function App() {
             </div>
           </ScrollReveal>
         )}
-      </main>
+      </main>}
     </div>
   )
 }

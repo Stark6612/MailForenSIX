@@ -1,0 +1,8 @@
+{
+  "campaign": "Demo PayPal Phishing Campaign",
+  "tlp": "AMBER",
+  "stix_valid": true,
+  "object_count": 10,
+  "errors": [],
+  "bundle_path": "D:\\SIH 2026\\MailForenSIX\\mail-foren-six\\backend\\proof\\sample_stix_amber.json"
+}

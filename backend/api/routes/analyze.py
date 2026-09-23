@@ -1,4 +1,4 @@
-"""
+﻿"""
 /analyze endpoint — Phase 2 (all engines wired)
 Parser + Auth (Phase 1) + Classifier + Geo + Domain + Risk (Phase 2)
 
@@ -18,7 +18,7 @@ from models.schemas import (
     AnalysisResponse, ErrorResponse,
     AuthResult, AuthStatus, RelayHop,
     DomainIntel, LIMESentence, ForensicMeta,
-    RiskTier, ThreatLabel,
+    RiskTier, ThreatLabel, CertInResult,
 )
 from core.config import settings
 from engines.parser     import parse_eml, ParsedEmail
@@ -27,6 +27,7 @@ from engines.classifier import predict_intent, explain_sentences, model_loaded
 from engines.geo        import resolve_geo_batch, GeoResult
 from engines.domain     import get_domain_intel, DomainIntelResult
 from engines.risk       import compute_risk
+from engines.certin     import classify_certin
 
 router = APIRouter()
 
@@ -129,7 +130,7 @@ async def _run_domain(parsed: ParsedEmail) -> DomainIntel | None:
     if not parsed.sender_domain:
         return None
 
-    result: DomainIntelResult = await get_domain_intel(parsed.sender_domain)
+    result: DomainIntelResult = await get_domain_intel(parsed.sender_domain, air_gapped=settings.AIR_GAPPED)
 
     return DomainIntel(
         domain          = result.domain,
@@ -187,7 +188,7 @@ async def analyze_email(
      (threat_label, confidence, lime_sentences),
      relay_hops,
      domain_intel) = await asyncio.gather(
-        loop.run_in_executor(None, validate_auth, parsed),   # Phase 1 — real auth
+        loop.run_in_executor(None, lambda: validate_auth(parsed, air_gapped=settings.AIR_GAPPED)),   # Phase 4 -- air-gapped aware
         _run_classifier(parsed),                              # Phase 2 — NLP
         _run_geo(parsed),                                     # Phase 2 — Geo
         _run_domain(parsed),                                  # Phase 2 — Domain
@@ -203,6 +204,46 @@ async def analyze_email(
     )
     risk_score = risk_score_raw
     risk_tier  = _map_risk_tier(risk_tier_str)
+
+    # ── CERT-In Incident Classification ───────────────────────────────────────
+    # Derive auth_score component (0-100) for CERT-In rule engine
+    _auth_fail = (
+        auth_result.spf == 'fail' or
+        auth_result.dkim == 'fail' or
+        auth_result.dmarc == 'fail'
+    )
+    _auth_pass = (
+        auth_result.spf == 'pass' and
+        auth_result.dkim in ('pass', 'none') and
+        auth_result.dmarc in ('pass', 'none')
+    )
+    auth_score_approx  = 10.0  if _auth_pass else (80.0 if _auth_fail else 40.0)
+    nlp_score_approx   = confidence * 100.0
+    relay_country_top  = relay_hops[0].country if relay_hops else ""
+
+    certin_raw = classify_certin(
+        auth_score               = auth_score_approx,
+        nlp_score                = nlp_score_approx,
+        composite_score          = risk_score,
+        intent_label             = threat_label.value if hasattr(threat_label, 'value') else str(threat_label),
+        is_campaign              = False,
+        has_malicious_attachment = False,
+        has_malicious_url        = "http" in ((parsed.body_text or "") + (parsed.body_html or "")).lower(),
+        sender_domain            = parsed.sender_domain or "",
+        subject                  = parsed.subject or "",
+        relay_country            = relay_country_top or "",
+        analysis_id              = analysis_id,
+        timestamp                = timestamp,
+    )
+    cert_in_result = CertInResult(
+        category             = certin_raw.category,
+        subcategory          = certin_raw.subcategory,
+        severity             = certin_raw.severity,
+        statutory_refs       = certin_raw.statutory_refs,
+        ioc_summary          = certin_raw.ioc_summary,
+        mandatory_fields     = certin_raw.mandatory_fields,
+        cert_in_report_ready = certin_raw.cert_in_report_ready,
+    )
 
     # ── Build warnings ─────────────────────────────────────────────────────────
     warnings = []
@@ -239,6 +280,7 @@ async def analyze_email(
         lime_sentences = lime_sentences,
         relay_hops     = relay_hops,
         domain_intel   = domain_intel,
+        cert_in        = cert_in_result,
         forensic       = ForensicMeta(
             email_sha256       = email_hash,
             analysis_timestamp = timestamp,

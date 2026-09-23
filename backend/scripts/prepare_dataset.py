@@ -26,27 +26,33 @@ from pathlib import Path
 import pandas as pd
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
-BASE_DIR = Path(__file__).resolve().parent.parent
-DATA_DIR = BASE_DIR / "data" / "archive"
-OUT_PATH = BASE_DIR / "data" / "training_data.parquet"
+BASE_DIR    = Path(__file__).resolve().parent.parent
+DATA_DIR    = BASE_DIR / "data" / "archive"
+DATA_ROOT   = BASE_DIR / "data"          # for datasets at data/ root (not archive/)
+OUT_PATH    = BASE_DIR / "data" / "training_data.parquet"
+PROOF_DIR   = BASE_DIR / "proof"
+PROOF_DIR.mkdir(exist_ok=True)
 
 # ── Per-dataset schema config ──────────────────────────────────────────────────
 # (filename, text_col_candidates, label_col_candidates, label_positive_values, sample_n)
-# label_positive_values: values in the label column that mean phishing/spam (→ 1)
-DATASETS = [
+# label_positive_values: values in the label column that mean phishing/spam (-> 1)
+# archive/ datasets (existing)
+ARCHIVE_DATASETS = [
     {
         "file":   "phishing_email.csv",
         "text":   ["text_combined", "Email Text", "text", "body", "email_text", "message"],
         "label":  ["Email Type", "label", "spam", "is_phishing", "class"],
         "pos":    ["Phishing Email", "1", 1, "spam", "phishing"],
         "sample": 30_000,
+        "dir":    "archive",
     },
     {
         "file":   "Nazario.csv",
         "text":   ["body", "text", "email_text", "content", "Email Text", "message"],
         "label":  ["label", "class", "spam", "is_phishing", "Email Type"],
         "pos":    [1, "1", "spam", "phishing", "Phishing Email"],
-        "sample": None,  # use all
+        "sample": None,
+        "dir":    "archive",
     },
     {
         "file":   "CEAS_08.csv",
@@ -54,6 +60,7 @@ DATASETS = [
         "label":  ["label", "spam", "class", "is_phishing"],
         "pos":    [1, "1", "spam"],
         "sample": 20_000,
+        "dir":    "archive",
     },
     {
         "file":   "SpamAssasin.csv",
@@ -61,6 +68,7 @@ DATASETS = [
         "label":  ["label", "spam", "class", "is_phishing"],
         "pos":    [1, "1", "spam"],
         "sample": None,
+        "dir":    "archive",
     },
     {
         "file":   "Nigerian_Fraud.csv",
@@ -68,6 +76,7 @@ DATASETS = [
         "label":  ["label", "spam", "class", "is_phishing"],
         "pos":    [1, "1", "spam", "phishing", "Phishing Email"],
         "sample": None,
+        "dir":    "archive",
     },
     {
         "file":   "Ling.csv",
@@ -75,15 +84,45 @@ DATASETS = [
         "label":  ["label", "spam", "class", "is_phishing"],
         "pos":    [1, "1", "spam"],
         "sample": None,
+        "dir":    "archive",
     },
     {
         "file":   "Enron.csv",
         "text":   ["body", "text", "email_text", "content", "Email Text", "message"],
         "label":  ["label", "spam", "class", "is_phishing"],
         "pos":    [1, "1", "spam"],
-        "sample": 20_000,  # mostly ham — cap to balance dataset
+        "sample": 20_000,
+        "dir":    "archive",
+    },
+    # ── New: Kaggle Phishing Email Dataset (Phishing_Email.csv at data/ root) ────
+    {
+        "file":   "Phishing_Email.csv",
+        "text":   ["Email Text"],
+        "label":  ["Email Type"],
+        "pos":    ["Phishing Email"],
+        "sample": 15_000,   # ~15k phishing + ham from this dataset
+        "dir":    "root",   # data/ root, not archive/
+    },
+    # ── New: Adversarial BEC Email Dataset (synthetic_emails.csv) ────────────────
+    {
+        "file":   "synthetic_emails.csv",
+        "text":   ["body", "subject"],
+        "label":  ["label"],
+        "pos":    [1, "1"],
+        "sample": None,
+        "dir":    "root",
+    },
+    # ── New: Adversarial BEC (poisoned / obfuscated variant) ─────────────────────
+    {
+        "file":   "synthetic_emails_poisoned.csv",
+        "text":   ["body", "subject"],
+        "label":  ["label"],
+        "pos":    [1, "1"],
+        "sample": None,
+        "dir":    "root",
     },
 ]
+DATASETS = ARCHIVE_DATASETS
 
 
 def _find_col(df: pd.DataFrame, candidates: list) -> str | None:
@@ -99,10 +138,21 @@ def _md5(text: str) -> str:
     return hashlib.md5(text.encode("utf-8", errors="replace")).hexdigest()
 
 
+def _normalize_label_val(v) -> str:
+    """Normalize label values: 1.0 -> '1', '1' -> '1', 'spam' -> 'spam'."""
+    try:
+        return str(int(float(str(v))))
+    except (ValueError, TypeError):
+        return str(v).strip()
+
+
 def load_dataset(cfg: dict) -> pd.DataFrame | None:
-    path = DATA_DIR / cfg["file"]
+    if cfg.get("dir") == "root":
+        path = DATA_ROOT / cfg["file"]
+    else:
+        path = DATA_DIR / cfg["file"]
     if not path.exists():
-        print(f"  [SKIP] {cfg['file']} — not found")
+        print(f"  [SKIP] {cfg['file']} — not found at {path}")
         return None
 
     print(f"  [LOAD] {cfg['file']} ({path.stat().st_size // 1_048_576} MB)…")
@@ -130,9 +180,12 @@ def load_dataset(cfg: dict) -> pd.DataFrame | None:
         df["_label"] = 1
         label_col = "_label"
 
-    # Normalise label → 0/1
-    pos_vals = set(str(v) for v in cfg["pos"])
-    df["label"] = df[label_col].apply(lambda v: 1 if str(v) in pos_vals else 0)
+    # Normalise label -> 0/1 (handles int, float, and string label values)
+    pos_vals = set()
+    for v in cfg["pos"]:
+        pos_vals.add(str(v).strip())
+        pos_vals.add(_normalize_label_val(v))
+    df["label"] = df[label_col].apply(lambda v: 1 if _normalize_label_val(v) in pos_vals or str(v).strip() in pos_vals else 0)
     df["text"]  = df[text_col].fillna("").astype(str)
 
     # Drop empty text
@@ -149,13 +202,21 @@ def load_dataset(cfg: dict) -> pd.DataFrame | None:
 
 
 def main():
+    import json
     print("\n=== MailForenSIX — Dataset Preparation ===\n")
     frames = []
+    proof_datasets = []
 
     for cfg in DATASETS:
         df = load_dataset(cfg)
         if df is not None and len(df) > 0:
             frames.append(df)
+            proof_datasets.append({
+                "file": cfg["file"],
+                "rows": len(df),
+                "phishing": int(df["label"].sum()),
+                "ham": int((df["label"] == 0).sum()),
+            })
 
     if not frames:
         print("[ERROR] No datasets loaded — aborting.")
@@ -170,7 +231,8 @@ def main():
     merged["_md5"] = merged["text"].apply(_md5)
     before = len(merged)
     merged = merged.drop_duplicates(subset="_md5").drop(columns="_md5")
-    print(f"        Removed {before - len(merged):,} duplicates → {len(merged):,} unique rows")
+    removed = before - len(merged)
+    print(f"        Removed {removed:,} duplicates -> {len(merged):,} unique rows")
 
     # Class balance report
     n_pos = merged["label"].sum()
@@ -178,12 +240,27 @@ def main():
     ratio = n_pos / len(merged) * 100
     print(f"\n[BALANCE] Phishing/Spam: {n_pos:,} ({ratio:.1f}%) | Ham: {n_neg:,} ({100-ratio:.1f}%)")
 
-    # Save
+    # Save parquet
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     merged.to_parquet(OUT_PATH, index=False)
     size_mb = OUT_PATH.stat().st_size / 1_048_576
     print(f"\n[SAVED]  {OUT_PATH}  ({size_mb:.1f} MB)")
     print(f"         Rows: {len(merged):,}  |  Columns: {list(merged.columns)}")
+
+    # Write proof artifact
+    proof = {
+        "datasets": proof_datasets,
+        "total_rows_before_dedup": before,
+        "duplicates_removed": removed,
+        "total_rows": len(merged),
+        "phishing_rows": int(n_pos),
+        "ham_rows": int(n_neg),
+        "phishing_pct": round(ratio, 2),
+    }
+    proof_path = PROOF_DIR / "dataset_prep.json"
+    with open(proof_path, "w") as f:
+        json.dump(proof, f, indent=2)
+    print(f"[PROOF]  {proof_path}")
     print("\n=== Done ===\n")
 
 

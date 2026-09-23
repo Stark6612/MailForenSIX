@@ -26,6 +26,8 @@ frontend/dist/
 *.db
 *.sqlite
 *.sqlite3
+# Un-exclude the pre-built SPF/DMARC cache — needed at runtime on Render
+!backend/models/spf_dmarc_cache.db
 
 # ── Raw training data — entire folder excluded ────────────────────────────────
 # Contains ~50k raw email files, CSVs, Parquet. Too large for GitHub.

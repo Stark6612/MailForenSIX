@@ -68,3 +68,63 @@ export async function anchorHash(sha256) {
   const { data } = await api.post('/export/anchor', { sha256 })
   return data
 }
+
+// ── Mode 2: Campaign Intelligence ─────────────────────────────────────────────
+
+/**
+ * POST /api/v1/campaign/analyze
+ * Upload a zip of .eml files for batch campaign analysis.
+ * @param {File} zipFile  — .zip archive of .eml files
+ * @param {File[]} emlFiles — individual .eml files (alternative)
+ * @returns {Promise<{campaign_id, status, n_files}>}
+ */
+export async function submitCampaign(zipFile, emlFiles) {
+  const form = new FormData()
+  if (zipFile)   form.append('zip_file', zipFile)
+  if (emlFiles)  emlFiles.forEach(f => form.append('eml_files', f))
+  const { data } = await api.post('/campaign/analyze', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 300_000,   // 5 min for large batches
+  })
+  return data
+}
+
+/**
+ * GET /api/v1/campaign/{id}/results
+ * Poll for campaign analysis results.
+ */
+export async function pollCampaignResults(campaignId) {
+  const { data } = await api.get(`/campaign/${campaignId}/results`)
+  return data
+}
+
+/**
+ * GET /api/v1/campaign/{id}/export/{format}
+ * Export campaign in the specified format.
+ * @param {string} campaignId
+ * @param {string} format — stix|sigma|suricata|postfix|exchange|dnsbl
+ * @param {string} tlp — amber|green|white|red
+ */
+export async function exportCampaign(campaignId, format, tlp = 'amber') {
+  const { data } = await api.get(
+    `/campaign/${campaignId}/export/${format}`,
+    { params: { tlp }, responseType: 'text', timeout: 30_000 }
+  )
+  return data
+}
+
+/**
+ * POST /api/v1/campaign/{id}/adjust
+ * Merge or split clusters with audit logging.
+ */
+export async function adjustCampaignCluster(campaignId, action, clusterIds, reason, analystId) {
+  const form = new FormData()
+  form.append('action',      action)
+  form.append('cluster_ids', clusterIds.join(','))
+  form.append('reason',      reason || '')
+  form.append('analyst_id',  analystId || 'anonymous')
+  const { data } = await api.post(`/campaign/${campaignId}/adjust`, form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return data
+}

@@ -1,0 +1,70 @@
+{
+  "datasets": [
+    {
+      "file": "phishing_email.csv",
+      "rows": 30000,
+      "phishing": 15547,
+      "ham": 14453
+    },
+    {
+      "file": "Nazario.csv",
+      "rows": 1559,
+      "phishing": 1559,
+      "ham": 0
+    },
+    {
+      "file": "CEAS_08.csv",
+      "rows": 20000,
+      "phishing": 11107,
+      "ham": 8893
+    },
+    {
+      "file": "SpamAssasin.csv",
+      "rows": 5806,
+      "phishing": 1715,
+      "ham": 4091
+    },
+    {
+      "file": "Nigerian_Fraud.csv",
+      "rows": 3331,
+      "phishing": 3331,
+      "ham": 0
+    },
+    {
+      "file": "Ling.csv",
+      "rows": 2859,
+      "phishing": 458,
+      "ham": 2401
+    },
+    {
+      "file": "Enron.csv",
+      "rows": 20000,
+      "phishing": 9330,
+      "ham": 10670
+    },
+    {
+      "file": "Phishing_Email.csv",
+      "rows": 15000,
+      "phishing": 5768,
+      "ham": 9232
+    },
+    {
+      "file": "synthetic_emails.csv",
+      "rows": 4139,
+      "phishing": 4139,
+      "ham": 0
+    },
+    {
+      "file": "synthetic_emails_poisoned.csv",
+      "rows": 4139,
+      "phishing": 4139,
+      "ham": 0
+    }
+  ],
+  "total_rows_before_dedup": 106833,
+  "duplicates_removed": 3473,
+  "total_rows": 103360,
+  "phishing_rows": 53785,
+  "ham_rows": 49575,
+  "phishing_pct": 52.04
+}

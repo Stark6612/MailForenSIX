@@ -1,0 +1,124 @@
+{
+  "test_date": "2026-09-23",
+  "urlhaus_domains": 5728,
+  "spf_dmarc_cache": {
+    "sbi.co.in": {
+      "spf_policy": "hardfail",
+      "dmarc_policy": "reject",
+      "cached_date": "2026-09-23"
+    },
+    "hdfcbank.com": {
+      "spf_policy": "hardfail",
+      "dmarc_policy": "reject",
+      "cached_date": "2026-09-23"
+    },
+    "icicibank.com": {
+      "spf_policy": "hardfail",
+      "dmarc_policy": "reject",
+      "cached_date": "2026-09-23"
+    },
+    "gov.in": {
+      "spf_policy": "hardfail",
+      "dmarc_policy": "reject",
+      "cached_date": "2026-09-23"
+    },
+    "cert-in.org.in": {
+      "spf_policy": "hardfail",
+      "dmarc_policy": "reject",
+      "cached_date": "2026-09-23"
+    },
+    "gmail.com": {
+      "spf_policy": "none",
+      "dmarc_policy": "none",
+      "cached_date": "2026-09-23"
+    }
+  },
+  "blacklist_tests": [
+    {
+      "domain": "secure-paypal-verify.com",
+      "hit": false,
+      "source": null,
+      "ok": true
+    },
+    {
+      "domain": "gmail.com",
+      "hit": false,
+      "source": null,
+      "ok": true
+    },
+    {
+      "domain": "123.12.227.243",
+      "hit": true,
+      "source": "urlhaus",
+      "ok": true
+    },
+    {
+      "domain": "39.70.74.23",
+      "hit": true,
+      "source": "urlhaus",
+      "ok": true
+    }
+  ],
+  "auth_airgap": [
+    {
+      "file": "email_01_C1.eml",
+      "domain": null,
+      "spf": "none",
+      "dkim": "none",
+      "dmarc": "none",
+      "source": "header"
+    },
+    {
+      "file": "email_02_C1.eml",
+      "domain": null,
+      "spf": "none",
+      "dkim": "none",
+      "dmarc": "none",
+      "source": "header"
+    },
+    {
+      "file": "email_03_C1.eml",
+      "domain": null,
+      "spf": "none",
+      "dkim": "none",
+      "dmarc": "none",
+      "source": "header"
+    }
+  ],
+  "domain_airgap": [
+    {
+      "domain": "sbi.co.in",
+      "blacklist_hit": false,
+      "blacklist_source": null,
+      "risky_tld": false,
+      "suspicion_score": 0.15,
+      "notes": [
+        "SPF cached policy: hardfail (as of 2026-09-23)",
+        "DMARC cached policy: reject (as of 2026-09-23)"
+      ]
+    },
+    {
+      "domain": "paypal-secure-alert.xyz",
+      "blacklist_hit": false,
+      "blacklist_source": null,
+      "risky_tld": true,
+      "suspicion_score": 0.35,
+      "notes": [
+        "High-risk TLD: .xyz",
+        "Domain not in SPF/DMARC cache -- no air-gapped auth data."
+      ]
+    },
+    {
+      "domain": "icicibank.com",
+      "blacklist_hit": false,
+      "blacklist_source": null,
+      "risky_tld": false,
+      "suspicion_score": 0.15,
+      "notes": [
+        "SPF cached policy: hardfail (as of 2026-09-23)",
+        "DMARC cached policy: reject (as of 2026-09-23)"
+      ]
+    }
+  ],
+  "all_passed": true
+}

@@ -1,15 +1,15 @@
-"""
-engines/auth.py — Phase 1
+﻿"""
+engines/auth.py -- Phase 4
 SPF / DKIM / DMARC authentication validation.
 
-Strategy (two-tier):
+Strategy (three-tier):
   1. Parse `Authentication-Results` headers set by the receiving mail server
-     — most reliable source; the server already did the cryptographic checks.
-  2. If absent, fall back to DNS-based policy lookup using checkdmarc + dnspython
-     to at least show whether the domain *has* valid records.
+     -- most reliable source; server already did the cryptographic checks.
+  2. DNS-based policy lookup (connected mode) using dnspython.
+  3. SQLite SPF/DMARC cache (air-gapped mode) -- no live DNS required.
 
 Public API:
-    validate_auth(parsed_email) -> AuthValidationResult
+    validate_auth(parsed_email, air_gapped=False) -> AuthValidationResult
 """
 
 import re
@@ -184,14 +184,14 @@ def _check_alignment(from_domain: Optional[str], return_path_domain: Optional[st
 
 # ── Main validator ─────────────────────────────────────────────────────────────
 
-def validate_auth(parsed) -> AuthValidationResult:
+def validate_auth(parsed, air_gapped: bool = False) -> AuthValidationResult:
     """
     Run full SPF/DKIM/DMARC validation on a ParsedEmail.
-    parsed: engines.parser.ParsedEmail instance
+    air_gapped=True: skips live DNS, uses SQLite cache as Tier 3 fallback.
     """
     result = AuthValidationResult()
 
-    # ── Tier 1: Authentication-Results header ──────────────────────────────────
+    # -- Tier 1: Authentication-Results header -----------------------------------
     if parsed.auth_results_headers:
         header_data = _parse_header_auth(parsed.auth_results_headers)
         result.spf          = header_data['spf']
@@ -202,38 +202,53 @@ def validate_auth(parsed) -> AuthValidationResult:
         result.dmarc_detail = header_data['dmarc_detail']
         result.source       = 'header'
 
-    # ── Tier 2: DNS fallback for anything still 'none' ─────────────────────────
-    domain = parsed.sender_domain
+    # -- Tier 2/3: Fallback for anything still 'none' ----------------------------
+    domain   = parsed.sender_domain
     used_dns = False
 
     if result.spf == 'none' and domain:
-        result.spf, result.spf_detail = _check_spf_dns(domain)
-        used_dns = True
+        if air_gapped:
+            from engines.domain import lookup_spf_dmarc_cache
+            _c = lookup_spf_dmarc_cache(domain)
+            if _c and _c.get('spf_policy'):
+                _pm = {'hardfail': 'fail', 'softfail': 'warn', 'pass': 'pass', 'none': 'none'}
+                result.spf        = _pm.get(_c['spf_policy'], 'none')
+                result.spf_detail = f"Cached SPF: {_c['spf_policy']} (as of {_c.get('cached_date','?')})"
+        else:
+            result.spf, result.spf_detail = _check_spf_dns(domain)
+            used_dns = True
 
     if result.dkim == 'none':
         result.dkim, result.dkim_detail = _check_dkim_signature(parsed.dkim_signature or '')
         if result.dkim == 'none' and domain:
-            # No DKIM-Signature in email — definitive absence
-            result.dkim = 'fail'
+            result.dkim        = 'fail'
             result.dkim_detail = 'No DKIM-Signature header found in email.'
 
     if result.dmarc == 'none' and domain:
-        result.dmarc, result.dmarc_detail = _check_dmarc_dns(domain)
-        used_dns = True
+        if air_gapped:
+            from engines.domain import lookup_spf_dmarc_cache
+            _c2 = lookup_spf_dmarc_cache(domain)
+            if _c2 and _c2.get('dmarc_policy'):
+                _pm2 = {'reject': 'pass', 'quarantine': 'warn', 'none': 'none'}
+                result.dmarc        = _pm2.get(_c2['dmarc_policy'], 'none')
+                result.dmarc_detail = f"Cached DMARC: {_c2['dmarc_policy']} (as of {_c2.get('cached_date','?')})"
+        else:
+            result.dmarc, result.dmarc_detail = _check_dmarc_dns(domain)
+            used_dns = True
 
     if used_dns and result.source == 'header':
         result.source = 'mixed'
     elif used_dns:
         result.source = 'dns'
 
-    # ── Alignment ──────────────────────────────────────────────────────────────
+    # -- Alignment ---------------------------------------------------------------
     result.alignment_ok = _check_alignment(parsed.sender_domain, parsed.return_path_domain)
 
-    # ── Human-readable summary ─────────────────────────────────────────────────
+    # -- Summary -----------------------------------------------------------------
     flags = []
-    if result.spf   == 'fail':  flags.append('SPF FAIL — sender not authorized')
-    if result.dkim  == 'fail':  flags.append('DKIM FAIL — no valid signature')
-    if result.dmarc == 'fail':  flags.append('DMARC FAIL — policy violation')
+    if result.spf   == 'fail':  flags.append('SPF FAIL -- sender not authorized')
+    if result.dkim  == 'fail':  flags.append('DKIM FAIL -- no valid signature')
+    if result.dmarc == 'fail':  flags.append('DMARC FAIL -- policy violation')
     if not result.alignment_ok: flags.append('From/Return-Path domain mismatch (spoofing indicator)')
     result.details = ' | '.join(flags) if flags else 'No critical authentication failures detected.'
 

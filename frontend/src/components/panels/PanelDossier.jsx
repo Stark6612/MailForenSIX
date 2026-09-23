@@ -313,9 +313,59 @@ export default function PanelDossier({ data, loading, airGapped }) {
         <div className="mt-3 pt-3 border-t border-mfx-border space-y-1">
           {data.warnings.map((w, i) => (
             <p key={i} className="text-sm text-mfx-suspicious flex items-start gap-1.5">
-              <span>⚠</span> {w}
+              <span>&#9888;</span> {w}
             </p>
           ))}
+        </div>
+      )}
+
+      {/* CERT-In Incident Classification */}
+      {data?.cert_in && (
+        <div className="mt-3 pt-3 border-t border-mfx-border">
+          <p className="text-sm text-mfx-muted uppercase tracking-wide font-semibold mb-2">
+            CERT-In Incident Classification
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Category + severity */}
+            <div className="bg-mfx-bg/60 rounded-md p-2.5 border border-mfx-border space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs text-mfx-muted font-semibold uppercase tracking-wide">Category</span>
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                  data.cert_in.severity === 'CRITICAL' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                  data.cert_in.severity === 'HIGH'     ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' :
+                  data.cert_in.severity === 'MEDIUM'   ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
+                                                         'bg-slate-500/20 text-slate-400 border border-slate-500/30'
+                }`}>
+                  {data.cert_in.severity}
+                </span>
+              </div>
+              <p className="text-sm font-semibold text-mfx-text leading-tight">{data.cert_in.category}</p>
+              <p className="text-xs text-mfx-muted leading-tight">{data.cert_in.subcategory}</p>
+            </div>
+
+            {/* Statutory references */}
+            <div className="bg-mfx-bg/60 rounded-md p-2.5 border border-mfx-border space-y-1">
+              <span className="text-xs text-mfx-muted font-semibold uppercase tracking-wide">Statutory Refs</span>
+              <p className="text-xs text-mfx-text leading-snug">{data.cert_in.statutory_refs}</p>
+            </div>
+
+            {/* IOC summary */}
+            {data.cert_in.ioc_summary && (
+              <div className="sm:col-span-2 bg-mfx-bg/60 rounded-md p-2.5 border border-mfx-border">
+                <span className="text-xs text-mfx-muted font-semibold uppercase tracking-wide block mb-1">IOC Summary</span>
+                <p className="text-xs text-mfx-text leading-snug font-mono">{data.cert_in.ioc_summary}</p>
+              </div>
+            )}
+
+            {/* Report ready flag */}
+            {data.cert_in.cert_in_report_ready && (
+              <div className="sm:col-span-2">
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-1 rounded">
+                  &#10003; CERT-In mandatory report data available
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

@@ -84,6 +84,18 @@ class ForensicMeta(BaseModel):
     anchor_backend: Optional[str] = None  # "opentimestamps" | "local"
 
 
+# ── CERT-In Incident Result ────────────────────────────────────────────────────
+
+class CertInResult(BaseModel):
+    category:              str
+    subcategory:           str
+    severity:              str              # LOW / MEDIUM / HIGH / CRITICAL
+    statutory_refs:        str
+    ioc_summary:           str
+    mandatory_fields:      dict
+    cert_in_report_ready:  bool = False
+
+
 # ── Main Response ──────────────────────────────────────────────────────────────
 
 class AnalysisResponse(BaseModel):
@@ -105,6 +117,9 @@ class AnalysisResponse(BaseModel):
     lime_sentences: List[LIMESentence] = []
     relay_hops: List[RelayHop] = []
     domain_intel: Optional[DomainIntel] = None
+
+    # CERT-In incident classification
+    cert_in: Optional[CertInResult] = None
 
     # Forensic metadata
     forensic: ForensicMeta

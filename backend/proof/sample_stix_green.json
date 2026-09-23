@@ -1,0 +1,181 @@
+{
+  "type": "bundle",
+  "id": "bundle--1e728613-91d9-4ee9-a615-020c9d81f0ef",
+  "objects": [
+    {
+      "type": "intrusion-set",
+      "spec_version": "2.1",
+      "id": "intrusion-set--943582ba-15e0-4983-9431-94372214a194",
+      "created": "2026-09-23T15:47:22.000Z",
+      "modified": "2026-09-23T15:47:22.000Z",
+      "name": "Unknown Actor - Demo PayPal Phishing Campaign",
+      "description": "Actor profile derived from 15 clustered emails.",
+      "object_marking_refs": [
+        "marking-definition--34098fce-860f-48ae-8e50-ebd3cc5e41da"
+      ],
+      "aliases": [
+        "Demo PayPal Phishing Campaign"
+      ],
+      "goals": [
+        "Credential Harvesting",
+        "Financial Fraud"
+      ],
+      "resource_level": "individual",
+      "primary_motivation": "financial-gain"
+    },
+    {
+      "type": "campaign",
+      "spec_version": "2.1",
+      "id": "campaign--120cda24-15dd-4e88-81b4-0ad7b4d1dae4",
+      "created": "2026-09-23T15:47:22.000Z",
+      "modified": "2026-09-23T15:47:22.000Z",
+      "name": "Demo PayPal Phishing Campaign",
+      "description": "Phishing campaign with 15 emails. Techniques: T1566.002, T1583.001",
+      "object_marking_refs": [
+        "marking-definition--34098fce-860f-48ae-8e50-ebd3cc5e41da"
+      ]
+    },
+    {
+      "type": "relationship",
+      "spec_version": "2.1",
+      "id": "relationship--0beda217-c45d-4eb0-ae73-a812c4e5554c",
+      "created": "2026-09-23T15:47:22.000Z",
+      "modified": "2026-09-23T15:47:22.000Z",
+      "relationship_type": "attributed-to",
+      "source_ref": "campaign--120cda24-15dd-4e88-81b4-0ad7b4d1dae4",
+      "target_ref": "intrusion-set--943582ba-15e0-4983-9431-94372214a194",
+      "object_marking_refs": [
+        "marking-definition--34098fce-860f-48ae-8e50-ebd3cc5e41da"
+      ]
+    },
+    {
+      "type": "infrastructure",
+      "spec_version": "2.1",
+      "id": "infrastructure--571684ac-2a4c-4bb1-9e45-5677fa703315",
+      "created": "2026-09-23T15:47:22.000Z",
+      "modified": "2026-09-23T15:47:22.000Z",
+      "name": "Relay IP: 185.234.218.12",
+      "infrastructure_types": [
+        "hosting-malware",
+        "botnet"
+      ],
+      "object_marking_refs": [
+        "marking-definition--34098fce-860f-48ae-8e50-ebd3cc5e41da"
+      ]
+    },
+    {
+      "type": "infrastructure",
+      "spec_version": "2.1",
+      "id": "infrastructure--4a9f20bf-f52b-4093-8ced-c90a6e6b34c8",
+      "created": "2026-09-23T15:47:22.000Z",
+      "modified": "2026-09-23T15:47:22.000Z",
+      "name": "Relay IP: 185.234.218.14",
+      "infrastructure_types": [
+        "hosting-malware",
+        "botnet"
+      ],
+      "object_marking_refs": [
+        "marking-definition--34098fce-860f-48ae-8e50-ebd3cc5e41da"
+      ]
+    },
+    {
+      "type": "infrastructure",
+      "spec_version": "2.1",
+      "id": "infrastructure--09790840-ccec-4e47-afa1-5233ae6a3ff2",
+      "created": "2026-09-23T15:47:22.000Z",
+      "modified": "2026-09-23T15:47:22.000Z",
+      "name": "Relay IP: 185.234.218.16",
+      "infrastructure_types": [
+        "hosting-malware",
+        "botnet"
+      ],
+      "object_marking_refs": [
+        "marking-definition--34098fce-860f-48ae-8e50-ebd3cc5e41da"
+      ]
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--055bd0e2-f7b0-4936-9fd0-672bc13f55c7",
+      "created": "2026-09-23T15:47:22.000Z",
+      "modified": "2026-09-23T15:47:22.000Z",
+      "name": "Phishing domain: secure-paypal-verify.com",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[domain-name:value = 'secure-paypal-verify.com']",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-23T15:47:22.000Z",
+      "object_marking_refs": [
+        "marking-definition--34098fce-860f-48ae-8e50-ebd3cc5e41da"
+      ],
+      "kill_chain_phases": [
+        {
+          "kill_chain_name": "mitre-attack",
+          "phase_name": "initial-access"
+        }
+      ]
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--9b3793a6-90f2-4171-a543-6ebaf34d672f",
+      "created": "2026-09-23T15:47:22.000Z",
+      "modified": "2026-09-23T15:47:22.000Z",
+      "name": "Phishing domain: paypal-account-update.net",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[domain-name:value = 'paypal-account-update.net']",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-23T15:47:22.000Z",
+      "object_marking_refs": [
+        "marking-definition--34098fce-860f-48ae-8e50-ebd3cc5e41da"
+      ],
+      "kill_chain_phases": [
+        {
+          "kill_chain_name": "mitre-attack",
+          "phase_name": "initial-access"
+        }
+      ]
+    },
+    {
+      "type": "attack-pattern",
+      "spec_version": "2.1",
+      "id": "attack-pattern--5ae77c89-d3cd-413e-97a8-dae276da12a5",
+      "created": "2026-09-23T15:47:22.000Z",
+      "modified": "2026-09-23T15:47:22.000Z",
+      "name": "T1566.002 - Spearphishing Link",
+      "description": "Phishing with URL",
+      "object_marking_refs": [
+        "marking-definition--34098fce-860f-48ae-8e50-ebd3cc5e41da"
+      ],
+      "external_references": [
+        {
+          "source_name": "mitre-attack",
+          "external_id": "T1566.002",
+          "url": "https://attack.mitre.org/techniques/T1566/002"
+        }
+      ]
+    },
+    {
+      "type": "attack-pattern",
+      "spec_version": "2.1",
+      "id": "attack-pattern--82175e8a-9aea-4146-b51a-ae5ef9b6ebbd",
+      "created": "2026-09-23T15:47:22.000Z",
+      "modified": "2026-09-23T15:47:22.000Z",
+      "name": "T1583.001 - Acquire Infrastructure: Domains",
+      "description": "Newly registered domains",
+      "object_marking_refs": [
+        "marking-definition--34098fce-860f-48ae-8e50-ebd3cc5e41da"
+      ],
+      "external_references": [
+        {
+          "source_name": "mitre-attack",
+          "external_id": "T1583.001",
+          "url": "https://attack.mitre.org/techniques/T1583/001"
+        }
+      ]
+    }
+  ]
+}
