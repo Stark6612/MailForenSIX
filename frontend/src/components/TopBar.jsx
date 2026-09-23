@@ -8,6 +8,7 @@
 
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { BACKEND_ROOT } from '../lib/api'
 import { checkHealth } from '../lib/api'
 
 export default function TopBar({ airGapped, onToggleAirGap }) {
@@ -108,7 +109,7 @@ export default function TopBar({ airGapped, onToggleAirGap }) {
               className="hover:text-mfx-accent transition-colors">
               About
             </Link>
-            <a href="http://localhost:8000/docs" target="_blank" rel="noopener noreferrer"
+            <a href={`${BACKEND_ROOT || 'http://localhost:8000'}/docs`} target="_blank" rel="noopener noreferrer"
               className="hover:text-mfx-accent transition-colors">
               API Docs ↗
             </a>

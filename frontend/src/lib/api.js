@@ -8,7 +8,7 @@ import axios from 'axios'
 
 const RAW_BASE = import.meta.env.VITE_API_BASE ?? '/api/v1'
 // If VITE_API_BASE is e.g. "https://mailforensix-backend.onrender.com/api/v1", root is "https://mailforensix-backend.onrender.com"
-const BACKEND_ROOT = RAW_BASE.startsWith('http')
+export const BACKEND_ROOT = RAW_BASE.startsWith('http')
   ? RAW_BASE.replace(/\/api\/v1\/?$/, '')
   : ''
 
