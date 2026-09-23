@@ -296,8 +296,41 @@ export default function Campaign() {
             <div style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.3rem' }}>
               Drop .eml files or a .zip archive
             </div>
-            <div style={{ color: '#9ca3af', fontSize: '0.85rem' }}>
+            <div style={{ color: '#9ca3af', fontSize: '0.85rem', marginBottom: '1rem' }}>
               Supports: individual .eml files or a .zip containing .eml files (max 200 emails)
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem' }}>
+              <button
+                type="button"
+                onClick={async (e) => {
+                  e.stopPropagation()
+                  try {
+                    const res = await fetch('/demo_campaign.zip')
+                    if (!res.ok) throw new Error('Demo file not found')
+                    const blob = await res.blob()
+                    const file = new File([blob], 'mode2_demo.zip', { type: 'application/zip' })
+                    setZipFile(file)
+                    setFiles([])
+                  } catch (err) {
+                    alert('Could not load demo zip: ' + err.message)
+                  }
+                }}
+                style={{
+                  background: 'rgba(99,102,241,0.18)',
+                  border: '1px solid rgba(99,102,241,0.4)',
+                  color: '#c7d2fe',
+                  borderRadius: '0.375rem',
+                  padding: '0.4rem 0.9rem',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  transition: 'all 0.15s',
+                }}
+                onMouseOver={e => e.currentTarget.style.background = 'rgba(99,102,241,0.3)'}
+                onMouseOut={e => e.currentTarget.style.background = 'rgba(99,102,241,0.18)'}
+              >
+                ⚡ Load Demo Sample (50 Emails · 3 Campaigns + Noise)
+              </button>
             </div>
             <input ref={fileInputRef} type="file" multiple accept=".eml,.zip" style={{ display: 'none' }}
               onChange={e => {

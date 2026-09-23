@@ -111,6 +111,10 @@ class ParsedEmail:
     # Display-name spoofing flag
     display_name_mismatch: bool = False
 
+    # Synthetic / Custom campaign metadata fallbacks
+    x_campaign_asn: Optional[str] = None
+    x_campaign_isp: Optional[str] = None
+
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -224,6 +228,10 @@ def parse_eml(raw_bytes: bytes) -> ParsedEmail:
     Parse raw email bytes (RFC 5322 / .eml) into a structured ParsedEmail.
     Uses Python stdlib `email` with modern policy for correct header decoding.
     """
+    # Defensively normalize double-CR from Windows file transfers
+    if b'\r\r\n' in raw_bytes:
+        raw_bytes = raw_bytes.replace(b'\r\r\n', b'\r\n')
+
     # Use compat32 for broadest format support (some old phishing emails use
     # non-standard MIME that default policy rejects)
     msg = email.message_from_bytes(raw_bytes, policy=email.policy.compat32)
@@ -240,6 +248,8 @@ def parse_eml(raw_bytes: bytes) -> ParsedEmail:
     result.return_path = msg.get('Return-Path', '')
     result.x_originating_ip = msg.get('X-Originating-IP', '') or msg.get('X-Source-IP', '')
     result.dkim_signature = msg.get('DKIM-Signature', '')
+    result.x_campaign_asn = msg.get('X-Campaign-ASN', '') or None
+    result.x_campaign_isp = msg.get('X-Campaign-ISP', '') or None
 
     # ── Received / Auth headers ────────────────────────────────────────────────
     result.received_headers     = msg.get_all('Received', [])

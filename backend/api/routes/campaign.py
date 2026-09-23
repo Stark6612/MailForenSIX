@@ -1,4 +1,4 @@
-﻿"""
+"""
 api/routes/campaign.py
 -----------------------
 Mode 2 Campaign Intelligence API.
@@ -39,11 +39,13 @@ def _now() -> str:
 async def _process_campaign(campaign_id: str, raw_emails: list[bytes]):
     """Background task: parse, embed, cluster, profile campaign emails."""
     import numpy as np
-    from engines.parser       import parse_eml
-    from engines.embedder     import embed_texts
-    from engines.distance     import compute_distance_matrix
-    from engines.clusterer    import cluster_emails
+    from engines.parser        import parse_eml
+    from engines.embedder      import embed_texts
+    from engines.distance      import compute_distance_matrix
+    from engines.clusterer     import cluster_emails
     from engines.actor_profile import build_actor_profile
+    from engines.geo           import resolve_geo_batch
+    from engines.auth          import validate_auth
 
     _campaigns[campaign_id]["status"] = "processing"
 
@@ -72,10 +74,64 @@ async def _process_campaign(campaign_id: str, raw_emails: list[bytes]):
 
         embeddings = await asyncio.get_event_loop().run_in_executor(None, embed_texts, texts)
 
-        # 3. Extract infrastructure feature sets
-        ip_sets     = [{h.ip for h in getattr(p, "received_hops", []) if getattr(h, "ip", None)} for p in parseds]
-        asn_sets    = [set() for _ in parseds]
-        domain_sets = [{getattr(p, "sender_domain", "")} - {""} for p in parseds]
+        # 3. Geo IP resolution & extract infrastructure feature sets
+        all_unique_ips = list({
+            h.ip for p in parseds
+            for h in getattr(p, "received_hops", [])
+            if getattr(h, "ip", None) and getattr(h, "ip", "") != "[redacted]"
+        })
+
+        geo_map = {}
+        if all_unique_ips:
+            try:
+                geo_results = await resolve_geo_batch(all_unique_ips)
+                geo_map = {g.ip: g for g in geo_results}
+            except Exception as geo_err:
+                pass
+
+        email_hops_list = []
+        ip_sets = []
+        asn_sets = []
+        domain_sets = []
+        auth_list = []
+
+        for p in parseds:
+            e_hops = []
+            ip_set = set()
+            asn_set = set()
+
+            for h in getattr(p, "received_hops", []):
+                ip = getattr(h, "ip", "")
+                if ip and ip != "[redacted]":
+                    ip_set.add(ip)
+                geo = geo_map.get(ip)
+                country = geo.country if geo and geo.country else None
+                city    = geo.city    if geo and geo.city    else None
+                asn     = geo.asn     if geo and geo.asn     else getattr(p, "x_campaign_asn", None)
+                isp     = geo.isp     if geo and geo.isp     else getattr(p, "x_campaign_isp", None)
+
+                if asn:
+                    asn_set.add(asn)
+
+                e_hops.append({
+                    "ip":       ip,
+                    "hostname": getattr(h, "hostname", None),
+                    "country":  country,
+                    "city":     city,
+                    "asn":      asn,
+                    "isp":      isp,
+                })
+
+            email_hops_list.append(e_hops)
+            ip_sets.append(ip_set)
+            asn_sets.append(asn_set)
+            domain_sets.append({getattr(p, "sender_domain", "")} - {"", None})
+
+            try:
+                auth_res = validate_auth(p, air_gapped=True)
+            except Exception:
+                auth_res = None
+            auth_list.append(auth_res)
 
         # 4. Compute distance matrix
         loop = asyncio.get_event_loop()
@@ -95,14 +151,27 @@ async def _process_campaign(campaign_id: str, raw_emails: list[bytes]):
 
         for cid in cluster_ids:
             cluster_indices = [i for i, l in enumerate(cluster_result.labels) if l == cid]
-            cluster_items = [{"parsed": parseds[i], "relay_hops": [], "domain_intel": None, "auth": None, "intent_label": "phishing"} for i in cluster_indices]
+            cluster_items = [
+                {
+                    "parsed": parseds[i],
+                    "relay_hops": email_hops_list[i],
+                    "domain_intel": None,
+                    "auth": auth_list[i],
+                    "intent_label": "phishing"
+                }
+                for i in cluster_indices
+            ]
             profile = build_actor_profile(cluster_items)
+
+            top_domains = list((profile.get("sender_domains") or {}).keys())
+            cluster_name = f"Campaign-{cid + 1} ({top_domains[0]})" if top_domains else f"Campaign-{cid + 1}"
+
             clusters.append({
                 "cluster_id":    cid,
                 "email_indices": cluster_indices,
                 "email_count":   len(cluster_indices),
                 "actor_profile": profile,
-                "name":          f"Campaign-{cid + 1}",
+                "name":          cluster_name,
                 "tlp":           "amber",
             })
 
