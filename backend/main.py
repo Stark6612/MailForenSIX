@@ -71,28 +71,10 @@ app.include_router(export.router,           prefix="/api/v1", tags=["export"])
 app.include_router(campaign_route.router,   prefix="/api/v1", tags=["campaign"])
 
 
-@app.get("/", include_in_schema=False)
+@app.api_route("/", methods=["GET", "HEAD", "POST"], include_in_schema=False)
 async def root():
-    """Root route — returns project identity card (JSON). Browser visits redirect to /docs."""
-    return JSONResponse({
-        "project":      "MailForenSIX",
-        "description":  "AI-Powered Email Forensic & Campaign Intelligence Platform",
-        "problem_id":   "#26106",
-        "hackathon":    "Smart India Hackathon 2026",
-        "version":      "0.4.0",
-        "mode1":        "Single-Email Triage  →  POST /api/v1/analyze",
-        "mode2":        "Campaign Intelligence →  POST /api/v1/campaign/analyze",
-        "docs":         "http://localhost:8000/docs",
-        "health":       "http://localhost:8000/health",
-        "frontend":     "http://localhost:5173",
-        "datasets":     "103,360 emails (10 sources, Apache 2.0)",
-        "classifier":   "TF-IDF(1-3gram, 50k) + XGBoost(n=200, d=6)  |  F1=0.9631  Acc=96.16%",
-        "mode2_engine": "all-MiniLM-L6-v2 embeddings + UMAP + HDBSCAN  |  ARI=0.8806",
-        "air_gapped":   str(settings.AIR_GAPPED),
-        "threat_intel": "URLhaus 5,728 domains + SPF/DMARC cache (52 institutional domains)",
-        "exports":      "STIX 2.1  |  Sigma  |  Suricata  |  Postfix  |  Exchange  |  DNSBL",
-        "github":       "https://github.com/Stark6612/MailForenSIX",
-    })
+    """Root route — redirect browser visits to Swagger interactive API docs."""
+    return RedirectResponse(url="/docs", status_code=307)
 
 
 @app.get("/health", tags=["health"])
