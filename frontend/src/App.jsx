@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Toaster, toast } from 'react-hot-toast'
 import { useAnalysis, STATUS } from './hooks/useAnalysis'
 import { exportPDF } from './lib/api'
@@ -109,7 +109,7 @@ export default function App() {
       />
 
       {/* ── Top navigation bar ─────────────────────────────────────────── */}
-      <TopBar airGapped={airGapped} onToggleAirGap={() => {
+      <TopBar airGapped={airGapped} currentAnalysis={result} onToggleAirGap={() => {
         setAirGapped(p => {
           const next = !p
           toast(next ? '🔌 Air-gapped ON' : '🌐 Air-gapped OFF')

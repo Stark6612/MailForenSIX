@@ -124,19 +124,26 @@ def _domain_component(domain) -> float:
     return round(suspicion * 100, 2)
 
 
-def compute_risk(
+def compute_risk_detailed(
     auth,
     intent_label:      str,
     intent_confidence: float,
     geo_hops:          list,
     domain,
-) -> tuple[int, str]:
+    attachments:       list = None,
+) -> tuple[int, str, dict]:
     """
-    Compute final weighted risk score + tier.
+    Compute final weighted risk score + tier + detailed breakdown.
 
     Returns:
-        (score: int 0–100, tier: str 'safe'|'suspicious'|'high'|'critical')
+        (score: int 0–100, tier: str, breakdown: dict)
     """
+    auth_score   = 0.0
+    intent_score = 0.0
+    geo_score    = 0.0
+    domain_score = 0.0
+    score = 0
+
     try:
         auth_score   = _auth_component(auth)
         intent_score = _intent_component(intent_label, intent_confidence)
@@ -148,13 +155,24 @@ def compute_risk(
             f"geo={geo_score:.1f} domain={domain_score:.1f}"
         )
 
-        # Weighted sum
+        # Weighted sum: 30% Auth + 30% Intent + 20% Geo + 20% Domain
         total = (
             auth_score   * 0.30 +
             intent_score * 0.30 +
             geo_score    * 0.20 +
             domain_score * 0.20
         )
+
+        # Elevate risk if malicious attachment is detected
+        if attachments:
+            for att in attachments:
+                risk_lvl = getattr(att, "risk_level", None) or (att.get("risk_level") if isinstance(att, dict) else "")
+                if risk_lvl == "MALICIOUS":
+                    total = max(total, 85.0)  # Guarantee Critical tier
+                    break
+                elif risk_lvl == "SUSPICIOUS":
+                    total = max(total, 60.0)  # Guarantee High tier
+
         score = int(round(min(max(total, 0.0), 100.0)))
 
     except Exception as e:
@@ -162,8 +180,34 @@ def compute_risk(
         score = 0
 
     # Map to tier
+    tier_found = "safe"
     for threshold, tier in _TIER_THRESHOLDS:
         if score >= threshold:
-            return score, tier
+            tier_found = tier
+            break
 
-    return 0, "safe"
+    breakdown = {
+        "auth_score": round(auth_score, 1),
+        "intent_score": round(intent_score, 1),
+        "geo_score": round(geo_score, 1),
+        "domain_score": round(domain_score, 1),
+        "auth_weighted": round(auth_score * 0.30, 1),
+        "intent_weighted": round(intent_score * 0.30, 1),
+        "geo_weighted": round(geo_score * 0.20, 1),
+        "domain_weighted": round(domain_score * 0.20, 1),
+        "total": score,
+    }
+
+    return score, tier_found, breakdown
+
+
+def compute_risk(
+    auth,
+    intent_label:      str,
+    intent_confidence: float,
+    geo_hops:          list,
+    domain,
+) -> tuple[int, str]:
+    """Backwards-compatible wrapper returning (score, tier)."""
+    score, tier, _ = compute_risk_detailed(auth, intent_label, intent_confidence, geo_hops, domain)
+    return score, tier

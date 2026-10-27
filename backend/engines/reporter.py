@@ -403,7 +403,7 @@ def generate_dossier(data: "AnalysisResponse") -> bytes:
     story.append(Paragraph("Chain of Custody", H2))
     coc_val_s = sty("COC_VAL", fontSize=7.5, leading=10, textColor=c(*_TEXT))
     coc_rows = [
-        ["Tool",              Paragraph("MailForenSIX v0.3.0 (SIH 2026)", coc_val_s)],
+        ["Tool",              Paragraph("MailForenSIX v0.4.0 (Forensic Intelligence)", coc_val_s)],
         ["Analysis Engine",   Paragraph("XGBoost + TF-IDF (ngram 1-3) · LIME · Real-time Geo · WHOIS Domain Intel", coc_val_s)],
         ["Timestamp",         Paragraph(ts_ist, coc_val_s)],
         ["Analysis UUID",     Paragraph(analysis_id, coc_val_s)],

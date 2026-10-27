@@ -1,4 +1,4 @@
-﻿"""
+"""
 /analyze endpoint — Phase 2 (all engines wired)
 Parser + Auth (Phase 1) + Classifier + Geo + Domain + Risk (Phase 2)
 
@@ -19,6 +19,7 @@ from models.schemas import (
     AuthResult, AuthStatus, RelayHop,
     DomainIntel, LIMESentence, ForensicMeta,
     RiskTier, ThreatLabel, CertInResult,
+    AttachmentForensic, RiskBreakdown,
 )
 from core.config import settings
 from engines.parser     import parse_eml, ParsedEmail
@@ -26,7 +27,7 @@ from engines.auth       import validate_auth, AuthValidationResult
 from engines.classifier import predict_intent, explain_sentences, model_loaded
 from engines.geo        import resolve_geo_batch, GeoResult
 from engines.domain     import get_domain_intel, DomainIntelResult
-from engines.risk       import compute_risk
+from engines.risk       import compute_risk, compute_risk_detailed
 from engines.certin     import classify_certin
 
 router = APIRouter()
@@ -194,16 +195,36 @@ async def analyze_email(
         _run_domain(parsed),                                  # Phase 2 — Domain
     )
 
-    # ── Phase 2: Real risk engine ──────────────────────────────────────────────
-    risk_score_raw, risk_tier_str = compute_risk(
-        auth           = auth_result,
-        intent_label   = threat_label.value if hasattr(threat_label, 'value') else str(threat_label),
+    # ── Phase 2: Real risk engine + breakdown ──────────────────────────────────
+    risk_score_raw, risk_tier_str, risk_breakdown_dict = compute_risk_detailed(
+        auth              = auth_result,
+        intent_label      = threat_label.value if hasattr(threat_label, 'value') else str(threat_label),
         intent_confidence = confidence,
-        geo_hops       = relay_hops,
-        domain         = domain_intel,
+        geo_hops          = relay_hops,
+        domain            = domain_intel,
+        attachments       = parsed.attachments,
     )
     risk_score = risk_score_raw
     risk_tier  = _map_risk_tier(risk_tier_str)
+    risk_breakdown = RiskBreakdown(**risk_breakdown_dict)
+
+    # ── Map attachment forensics ──────────────────────────────────────────────
+    attachment_forensics = [
+        AttachmentForensic(
+            filename            = a.filename,
+            size_bytes          = a.size_bytes,
+            size_formatted      = a.size_formatted,
+            sha256              = a.sha256,
+            md5                 = a.md5,
+            extension           = a.extension,
+            is_dangerous        = a.is_dangerous,
+            is_double_extension = a.is_double_extension,
+            entropy             = a.entropy,
+            risk_level          = a.risk_level,
+            risk_reasons        = a.risk_reasons,
+        )
+        for a in parsed.attachments
+    ]
 
     # ── CERT-In Incident Classification ───────────────────────────────────────
     # Derive auth_score component (0-100) for CERT-In rule engine
@@ -221,13 +242,15 @@ async def analyze_email(
     nlp_score_approx   = confidence * 100.0
     relay_country_top  = relay_hops[0].country if relay_hops else ""
 
+    has_malicious_att = any(a.risk_level in ("MALICIOUS", "SUSPICIOUS") for a in parsed.attachments)
+
     certin_raw = classify_certin(
         auth_score               = auth_score_approx,
         nlp_score                = nlp_score_approx,
         composite_score          = risk_score,
         intent_label             = threat_label.value if hasattr(threat_label, 'value') else str(threat_label),
         is_campaign              = False,
-        has_malicious_attachment = False,
+        has_malicious_attachment = has_malicious_att,
         has_malicious_url        = "http" in ((parsed.body_text or "") + (parsed.body_html or "")).lower(),
         sender_domain            = parsed.sender_domain or "",
         subject                  = parsed.subject or "",
@@ -260,6 +283,8 @@ async def analyze_email(
         )
     if all(h.geo_mode == 'none' for h in relay_hops) and relay_hops:
         warnings.append('Geo lookup failed for all hops — ip-api.com may be rate-limited.')
+    if has_malicious_att:
+        warnings.append('High-risk executable/masquerading attachment detected in email body.')
 
     return AnalysisResponse(
         analysis_id    = analysis_id,
@@ -271,6 +296,7 @@ async def analyze_email(
         risk_tier      = risk_tier,
         threat_label   = threat_label,
         confidence     = confidence,
+        risk_breakdown = risk_breakdown,
         auth           = AuthResult(
             spf    = _map_auth_status(auth_result.spf),
             dkim   = _map_auth_status(auth_result.dkim),
@@ -280,6 +306,7 @@ async def analyze_email(
         lime_sentences = lime_sentences,
         relay_hops     = relay_hops,
         domain_intel   = domain_intel,
+        attachments    = attachment_forensics,
         cert_in        = cert_in_result,
         forensic       = ForensicMeta(
             email_sha256       = email_hash,

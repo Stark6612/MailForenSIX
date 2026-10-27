@@ -177,6 +177,21 @@ async def _process_campaign(campaign_id: str, raw_emails: list[bytes]):
 
         noise_indices = [i for i, l in enumerate(cluster_result.labels) if l == -1]
 
+        email_summaries = [
+            {
+                "index": i,
+                "subject": p.subject or "(No Subject)",
+                "sender": p.from_ or "Unknown",
+                "domain": getattr(p, "sender_domain", "unknown") or "unknown",
+                "cluster_id": cluster_result.labels[i] if i < len(cluster_result.labels) else -1,
+                "has_attachment": getattr(p, "has_attachments", False),
+                "attachment_count": len(getattr(p, "attachments", [])),
+                "origin_ip": email_hops_list[i][0]["ip"] if email_hops_list[i] else "Unknown",
+                "country": email_hops_list[i][0]["country"] if email_hops_list[i] and email_hops_list[i][0]["country"] else "Unknown",
+            }
+            for i, p in enumerate(parseds)
+        ]
+
         _campaigns[campaign_id].update({
             "status":         "complete",
             "n_emails":       len(parseds),
@@ -186,6 +201,7 @@ async def _process_campaign(campaign_id: str, raw_emails: list[bytes]):
             "labels":         cluster_result.labels,
             "clusters":       clusters,
             "noise_indices":  noise_indices,
+            "email_summaries": email_summaries,
             "umap_embedding": (
                 cluster_result.umap_embedding.tolist()
                 if cluster_result.umap_embedding is not None else None

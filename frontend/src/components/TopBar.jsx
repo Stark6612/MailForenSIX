@@ -10,9 +10,11 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { BACKEND_ROOT } from '../lib/api'
 import { checkHealth } from '../lib/api'
+import SecurityToolsModal from './SecurityToolsModal'
 
-export default function TopBar({ airGapped, onToggleAirGap }) {
+export default function TopBar({ airGapped, onToggleAirGap, currentAnalysis }) {
   const [health, setHealth] = useState(null)
+  const [toolsOpen, setToolsOpen] = useState(false)
   // Poll health every 30s
   useEffect(() => {
     let cancelled = false
@@ -51,7 +53,7 @@ export default function TopBar({ airGapped, onToggleAirGap }) {
           </Link>
           <span className="hidden lg:inline text-sm px-3 py-1 rounded-full border"
             style={{ color: 'var(--mfx-muted)', borderColor: 'var(--mfx-border)' }}>
-            AI Email Forensics · SIH 2026
+            AI Email Forensics & Threat Intelligence
           </span>
         </div>
 
@@ -103,8 +105,15 @@ export default function TopBar({ airGapped, onToggleAirGap }) {
           </button>
 
           {/* ── Nav links ─────────────────────────────────────────────── */}
-          <nav className="hidden md:flex items-center gap-5 text-sm font-medium"
+          <nav className="hidden md:flex items-center gap-4 text-sm font-medium"
             style={{ color: 'var(--mfx-muted)' }}>
+            <button
+              onClick={() => setToolsOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1 rounded bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/25 hover:text-white transition-all font-semibold text-xs shadow-sm"
+              title="Configure YARA, MISP/OpenCTI & OSINT Threat Tools"
+            >
+              <span>🛠️</span> Tools & Integrations
+            </button>
             <Link to="/about"
               className="hover:text-mfx-accent transition-colors">
               About
@@ -117,6 +126,9 @@ export default function TopBar({ airGapped, onToggleAirGap }) {
 
         </div>
       </div>
+
+      {/* Security Tools Proficiency & Integrations Modal */}
+      <SecurityToolsModal isOpen={toolsOpen} onClose={() => setToolsOpen(false)} currentAnalysis={currentAnalysis} />
     </header>
   )
 }

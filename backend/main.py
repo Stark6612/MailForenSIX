@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, JSONResponse
 from contextlib import asynccontextmanager
 
-from api.routes import analyze, export
+from api.routes import analyze, export, tools as tools_route
 from api.routes import campaign as campaign_route
 from core.config import settings
 from core.database import init_db
@@ -48,7 +48,7 @@ app = FastAPI(
     title="MailForensix API",
     description=(
         "AI-Powered Email Campaign Intelligence Platform — "
-        "SIH 2026, Problem ID #26106 | Mode 1: Single-Email Triage | Mode 2: Campaign Clustering"
+        "AI & Cyber Threat Intelligence Analytics Platform | Mode 1: Single-Email Triage | Mode 2: Campaign Clustering"
     ),
     version="0.4.0",
     lifespan=lifespan,
@@ -69,6 +69,7 @@ app.add_middleware(
 app.include_router(analyze.router,          prefix="/api/v1", tags=["analysis"])
 app.include_router(export.router,           prefix="/api/v1", tags=["export"])
 app.include_router(campaign_route.router,   prefix="/api/v1", tags=["campaign"])
+app.include_router(tools_route.router,      prefix="/api/v1/tools", tags=["tools"])
 
 
 @app.api_route("/", methods=["GET", "HEAD", "POST"], include_in_schema=False)

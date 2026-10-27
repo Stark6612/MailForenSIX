@@ -319,6 +319,83 @@ export default function PanelDossier({ data, loading, airGapped }) {
         </div>
       )}
 
+      {/* Attachment Forensics & Static Malware Triage */}
+      {data?.attachments?.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-mfx-border space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-mfx-muted uppercase tracking-wide font-semibold">
+              Attachment Forensic Triage & Malware Analysis ({data.attachments.length})
+            </p>
+            <span className="text-xs text-mfx-muted">Static Heuristics & Cryptographic Hashes</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {data.attachments.map((att, idx) => (
+              <div
+                key={idx}
+                className="bg-mfx-bg/70 rounded-md p-3 border border-mfx-border space-y-2 relative"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="text-lg">📎</span>
+                    <span className="font-semibold text-sm text-mfx-text truncate" title={att.filename}>
+                      {att.filename}
+                    </span>
+                    <span className="text-xs text-mfx-muted shrink-0">({att.size_formatted})</span>
+                  </div>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider shrink-0 ${
+                      att.risk_level === 'MALICIOUS'
+                        ? 'bg-red-500/20 text-red-400 border-red-500/40 animate-pulse'
+                        : att.risk_level === 'SUSPICIOUS'
+                        ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                        : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                    }`}
+                  >
+                    {att.risk_level}
+                  </span>
+                </div>
+
+                {/* Hashes & Entropy */}
+                <div className="grid grid-cols-1 gap-1 text-xs">
+                  <div className="flex items-center justify-between gap-2 bg-mfx-surface/80 p-1.5 rounded border border-mfx-border/60">
+                    <span className="text-mfx-muted font-mono text-[11px] shrink-0">SHA-256:</span>
+                    <code className="text-mfx-accent text-[11px] font-mono truncate" title={att.sha256}>
+                      {att.sha256}
+                    </code>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(att.sha256)
+                        toast.success('Attachment SHA-256 copied!')
+                      }}
+                      className="text-[10px] px-1.5 py-0.5 rounded bg-mfx-accent/10 text-mfx-accent hover:bg-mfx-accent/20 transition-colors shrink-0 font-semibold"
+                    >
+                      copy
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] px-1 text-mfx-muted">
+                    <span>
+                      Shannon Entropy: <strong className={att.entropy > 7.0 ? 'text-amber-400' : 'text-mfx-text'}>{att.entropy} / 8.0</strong>
+                    </span>
+                    <span>Format: <strong className="text-mfx-text font-mono">{att.extension || 'none'}</strong></span>
+                  </div>
+                </div>
+
+                {/* Risk reasons */}
+                {att.risk_reasons?.length > 0 && (
+                  <div className="space-y-1 pt-1 border-t border-mfx-border/40">
+                    {att.risk_reasons.map((r, rIdx) => (
+                      <p key={rIdx} className="text-[11px] text-amber-300/90 flex items-start gap-1 leading-tight">
+                        <span className="text-amber-400">&#9888;</span> {r}
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* CERT-In Incident Classification */}
       {data?.cert_in && (
         <div className="mt-3 pt-3 border-t border-mfx-border">

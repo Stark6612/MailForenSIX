@@ -1,4 +1,4 @@
-﻿"""
+"""
 engines/exporter.py
 --------------------
 Compliance-ready multi-format export for campaign intelligence results.
@@ -191,8 +191,8 @@ description: >
   Phishing campaign detected by MailForensix - {name}.
   {profile.get('email_count', 0)} emails clustered from {len(ips)} relay IPs.
 references:
-  - https://github.com/CYBERNEXUS/mailforensix
-author: MailForensix (CYBERNEXUS Team)
+  - https://github.com/Stark6612/MailForenSIX
+author: MailForensix (Academic Threat Intelligence & Forensics Lab)
 date: {datetime.now(timezone.utc).strftime('%Y/%m/%d')}
 tags:
   - attack.initial_access

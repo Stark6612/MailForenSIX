@@ -10,10 +10,13 @@ Public API:
 
 import email
 import email.policy
+import hashlib
 import ipaddress
+import math
 import re
+from collections import Counter
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, List
 
 
 # ── Private IP detection ───────────────────────────────────────────────────────
@@ -81,6 +84,35 @@ class RawHop:
     raw_received: str = ''
 
 
+# ── Attachment Analysis ────────────────────────────────────────────────────────
+_DANGEROUS_EXTENSIONS = {
+    '.exe', '.scr', '.bat', '.cmd', '.vbs', '.vbe', '.js', '.jse',
+    '.wsf', '.wsh', '.hta', '.ps1', '.ps1xml', '.iso', '.img', '.vhd',
+    '.dll', '.cpl', '.pif', '.jar', '.msi', '.msp', '.reg',
+}
+_MACRO_EXTENSIONS = {
+    '.docm', '.dotm', '.xlsm', '.xltm', '.xlam', '.pptm', '.potm', '.ppam', '.ppsm',
+}
+_ARCHIVE_EXTENSIONS = {
+    '.zip', '.rar', '.7z', '.tar', '.gz', '.bz2', '.xz', '.cab',
+}
+
+
+@dataclass
+class AttachmentInfo:
+    filename: str
+    size_bytes: int
+    size_formatted: str
+    sha256: str
+    md5: str
+    extension: str
+    is_dangerous: bool
+    is_double_extension: bool
+    entropy: float
+    risk_level: str          # "SAFE" | "SUSPICIOUS" | "MALICIOUS"
+    risk_reasons: list[str] = field(default_factory=list)
+
+
 @dataclass
 class ParsedEmail:
     # Identity
@@ -98,6 +130,7 @@ class ParsedEmail:
     body_html: str = ''
     has_attachments: bool = False
     attachment_names: list[str] = field(default_factory=list)
+    attachments: list[AttachmentInfo] = field(default_factory=list)
     urls: list[str] = field(default_factory=list)
 
     # Forensics
@@ -143,6 +176,72 @@ def _get_provider(ip: str) -> Optional[str]:
 
 def _extract_urls(text: str) -> list[str]:
     return re.findall(r'https?://[^\s\'"<>]+', text)
+
+
+def _calculate_entropy(data: bytes) -> float:
+    if not data:
+        return 0.0
+    counter = Counter(data)
+    length = len(data)
+    entropy = -sum((count / length) * math.log2(count / length) for count in counter.values())
+    return round(entropy, 3)
+
+
+def _format_size(num_bytes: int) -> str:
+    for unit in ['B', 'KB', 'MB', 'GB']:
+        if num_bytes < 1024.0:
+            return f"{num_bytes:.1f} {unit}" if unit != 'B' else f"{num_bytes} B"
+        num_bytes /= 1024.0
+    return f"{num_bytes:.1f} TB"
+
+
+def _analyze_attachment(filename: str, payload_bytes: bytes) -> AttachmentInfo:
+    size = len(payload_bytes)
+    sha256 = hashlib.sha256(payload_bytes).hexdigest()
+    md5 = hashlib.md5(payload_bytes).hexdigest()
+    entropy = _calculate_entropy(payload_bytes)
+
+    clean_fn = filename.strip()
+    parts = clean_fn.rsplit('.', 2)
+    ext = ('.' + clean_fn.split('.')[-1].lower()) if '.' in clean_fn else ''
+    is_double = len(parts) >= 3 and (('.' + parts[-1].lower()) in _DANGEROUS_EXTENSIONS or ('.' + parts[-1].lower()) in _MACRO_EXTENSIONS)
+
+    is_dangerous = ext in _DANGEROUS_EXTENSIONS
+    is_macro = ext in _MACRO_EXTENSIONS
+    is_archive = ext in _ARCHIVE_EXTENSIONS
+
+    risk_reasons = []
+    if is_double:
+        risk_reasons.append(f"Double extension masquerade detected: {clean_fn}")
+    if is_dangerous:
+        risk_reasons.append(f"Executable/script payload extension: {ext}")
+    if is_macro:
+        risk_reasons.append(f"Macro-enabled document (dropper vector): {ext}")
+    if is_archive:
+        risk_reasons.append("Archive container — commonly used to deliver evasive payloads")
+    if entropy > 7.2:
+        risk_reasons.append(f"High Shannon entropy ({entropy}/8.0) suggests packed or encrypted payload")
+
+    if is_double or is_dangerous or (is_macro and entropy > 6.8):
+        risk_level = "MALICIOUS"
+    elif is_macro or is_archive or entropy > 7.0:
+        risk_level = "SUSPICIOUS"
+    else:
+        risk_level = "SAFE"
+
+    return AttachmentInfo(
+        filename=clean_fn,
+        size_bytes=size,
+        size_formatted=_format_size(size),
+        sha256=sha256,
+        md5=md5,
+        extension=ext,
+        is_dangerous=is_dangerous or is_double,
+        is_double_extension=is_double,
+        entropy=entropy,
+        risk_level=risk_level,
+        risk_reasons=risk_reasons,
+    )
 
 
 def _check_display_name_mismatch(from_header: str) -> bool:
@@ -274,8 +373,11 @@ def parse_eml(raw_bytes: bytes) -> ParsedEmail:
                     charset = part.get_content_charset() or 'utf-8'
                     result.body_html = payload.decode(charset, errors='replace')
             elif part.get_filename():
+                raw_payload = part.get_payload(decode=True) or b''
+                att_info = _analyze_attachment(part.get_filename(), raw_payload)
                 result.has_attachments = True
-                result.attachment_names.append(part.get_filename())
+                result.attachments.append(att_info)
+                result.attachment_names.append(att_info.filename)
     else:
         payload = msg.get_payload(decode=True)
         if payload:

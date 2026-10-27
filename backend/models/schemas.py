@@ -84,6 +84,36 @@ class ForensicMeta(BaseModel):
     anchor_backend: Optional[str] = None  # "opentimestamps" | "local"
 
 
+# ── Attachment Forensics ───────────────────────────────────────────────────────
+
+class AttachmentForensic(BaseModel):
+    filename: str
+    size_bytes: int
+    size_formatted: str
+    sha256: str
+    md5: str
+    extension: str
+    is_dangerous: bool = False
+    is_double_extension: bool = False
+    entropy: float = 0.0
+    risk_level: str = "SAFE"        # "SAFE" | "SUSPICIOUS" | "MALICIOUS"
+    risk_reasons: List[str] = []
+
+
+# ── Risk Vector Breakdown ─────────────────────────────────────────────────────
+
+class RiskBreakdown(BaseModel):
+    auth_score: float
+    intent_score: float
+    geo_score: float
+    domain_score: float
+    auth_weighted: float
+    intent_weighted: float
+    geo_weighted: float
+    domain_weighted: float
+    total: int
+
+
 # ── CERT-In Incident Result ────────────────────────────────────────────────────
 
 class CertInResult(BaseModel):
@@ -111,12 +141,14 @@ class AnalysisResponse(BaseModel):
     risk_tier: RiskTier
     threat_label: ThreatLabel
     confidence: float = Field(ge=0.0, le=1.0)
+    risk_breakdown: Optional[RiskBreakdown] = None
 
     # Analysis modules
     auth: AuthResult
     lime_sentences: List[LIMESentence] = []
     relay_hops: List[RelayHop] = []
     domain_intel: Optional[DomainIntel] = None
+    attachments: List[AttachmentForensic] = []
 
     # CERT-In incident classification
     cert_in: Optional[CertInResult] = None

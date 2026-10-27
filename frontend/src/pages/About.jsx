@@ -1,4 +1,4 @@
-﻿import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import StrokeText from '../components/animations/StrokeText'
 import SpotlightCard from '../components/animations/SpotlightCard'
 import CountUp from '../components/animations/CountUp'
@@ -115,7 +115,7 @@ export default function About() {
           <div className="inline-flex items-center gap-2 text-sm text-mfx-muted border border-mfx-border
                           px-4 py-1.5 rounded-full mb-3">
             <span className="w-2 h-2 rounded-full bg-mfx-accent animate-pulse" />
-            SIH 2026 · Problem #26106 · Team CyberNexus
+            Academic Project · AI & Cyber Threat Intelligence
           </div>
           <div className="max-w-xl mx-auto py-1">
             <StrokeText
@@ -156,7 +156,7 @@ export default function About() {
                 Demo Build — Not for Production Investigative Use
               </p>
               <p className="text-sm text-mfx-muted leading-relaxed">
-                This is an MVP built for the Smart India Hackathon 2026 (48-hour sprint).
+                This is an academic research prototype built for threat intelligence and forensic analysis evaluation.
                 This live deployment is shared for demonstration and evaluation purposes only.
                 When you submit an email here, its content is processed by our server.
                 For actual forensic investigations involving sensitive or confidential emails,
@@ -346,8 +346,8 @@ export default function About() {
 
         {/* ── Footer ──────────────────────────────────────────────────────── */}
         <div className="text-center text-sm text-mfx-muted py-8 border-t border-mfx-border space-y-1.5">
-          <p>MailForenSIX v0.4.0 · Smart India Hackathon 2026 · Problem #26106</p>
-          <p>Team CyberNexus ·{' '}
+          <p>MailForenSIX v0.4.0 · Academic Threat Intelligence & Forensics Platform</p>
+          <p>Cyber Threat Intelligence & Forensics Lab ·{' '}
             <a href="https://github.com/Stark6612/MailForenSIX" target="_blank"
               rel="noopener noreferrer" className="text-mfx-accent hover:underline">
               github.com/Stark6612/MailForenSIX

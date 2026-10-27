@@ -84,6 +84,73 @@ export default function PanelRiskGauge({ data, loading }) {
         </div>
       </div>
 
+      {/* 4-Pillar Risk Vector Breakdown Chart */}
+      {data?.risk_breakdown && (
+        <>
+          <div className="divider" />
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold uppercase tracking-wider text-mfx-muted text-[11px]">
+                Risk Vector Contribution
+              </span>
+              <span className="text-[10px] text-mfx-muted font-mono">{score}/100 pts</span>
+            </div>
+
+            {/* Stacked multi-vector bar */}
+            <div className="h-2 w-full rounded-full bg-mfx-surface flex overflow-hidden border border-mfx-border/60">
+              <div
+                style={{ width: `${(data.risk_breakdown.auth_weighted / 100) * 100}%` }}
+                className="bg-purple-500 transition-all duration-500"
+                title={`Auth Risk: ${data.risk_breakdown.auth_weighted} pts (max 30)`}
+              />
+              <div
+                style={{ width: `${(data.risk_breakdown.intent_weighted / 100) * 100}%` }}
+                className="bg-blue-500 transition-all duration-500"
+                title={`ML Intent Risk: ${data.risk_breakdown.intent_weighted} pts (max 30)`}
+              />
+              <div
+                style={{ width: `${(data.risk_breakdown.geo_weighted / 100) * 100}%` }}
+                className="bg-sky-500 transition-all duration-500"
+                title={`Relay Geo Risk: ${data.risk_breakdown.geo_weighted} pts (max 20)`}
+              />
+              <div
+                style={{ width: `${(data.risk_breakdown.domain_weighted / 100) * 100}%` }}
+                className="bg-rose-500 transition-all duration-500"
+                title={`Domain Risk: ${data.risk_breakdown.domain_weighted} pts (max 20)`}
+              />
+            </div>
+
+            {/* Pillar badges with points */}
+            <div className="grid grid-cols-2 gap-1.5 pt-1 text-[11px]">
+              <div className="flex items-center justify-between px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/20 text-purple-300">
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400" /> Auth
+                </span>
+                <span className="font-mono font-semibold">{data.risk_breakdown.auth_weighted} <span className="opacity-60 text-[9px]">/30</span></span>
+              </div>
+              <div className="flex items-center justify-between px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-300">
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400" /> ML Intent
+                </span>
+                <span className="font-mono font-semibold">{data.risk_breakdown.intent_weighted} <span className="opacity-60 text-[9px]">/30</span></span>
+              </div>
+              <div className="flex items-center justify-between px-1.5 py-0.5 rounded bg-sky-500/10 border border-sky-500/20 text-sky-300">
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-sky-400" /> Relay/Geo
+                </span>
+                <span className="font-mono font-semibold">{data.risk_breakdown.geo_weighted} <span className="opacity-60 text-[9px]">/20</span></span>
+              </div>
+              <div className="flex items-center justify-between px-1.5 py-0.5 rounded bg-rose-500/10 border border-rose-500/20 text-rose-300">
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-400" /> Domain
+                </span>
+                <span className="font-mono font-semibold">{data.risk_breakdown.domain_weighted} <span className="opacity-60 text-[9px]">/20</span></span>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Sender summary */}
       {data?.sender && (
         <>

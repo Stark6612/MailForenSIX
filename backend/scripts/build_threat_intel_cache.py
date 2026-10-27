@@ -1,4 +1,4 @@
-﻿"""
+"""
 scripts/build_threat_intel_cache.py
 -------------------------------------
 Downloads URLhaus (Abuse.ch) and PhishTank threat intel feeds and
@@ -30,7 +30,7 @@ _DOMAIN_RE = re.compile(r"https?://([^/:?#\s]+)")
 def fetch_urlhaus():
     print("[URLhaus] Downloading recent malicious URL list...")
     try:
-        req  = Request(URLHAUS_CSV_URL, headers={"User-Agent": "MailForensix/0.4 (SIH2026)"})
+        req  = Request(URLHAUS_CSV_URL, headers={"User-Agent": "MailForensix/0.4 (CTI-Research)"})
         resp = urlopen(req, timeout=30)
         raw  = resp.read().decode("utf-8", errors="replace")
 
