@@ -21,16 +21,45 @@ export const api = axios.create({
  * POST /analyze
  * @param {File|null} emlFile    — .eml file object
  * @param {string|null} rawText  — pasted raw header/source
+ * @param {string} model         — model id (lr, svm, nb, dt, xgb)
  * @returns {Promise<AnalysisResponse>}
  */
-export async function analyzeEmail(emlFile, rawText) {
+export async function analyzeEmail(emlFile, rawText, model = 'lr') {
   const form = new FormData()
   if (emlFile) form.append('eml_file', emlFile)
   if (rawText) form.append('raw_headers', rawText)
 
-  const { data } = await api.post('/analyze', form, {
+  const { data } = await api.post(`/analyze?model=${model}`, form, {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
+  return data
+}
+
+/**
+ * AICS Model Benchmark & Comparison Endpoints
+ */
+export async function getModelBenchmark() {
+  const { data } = await api.get('/models/benchmark')
+  return data
+}
+
+export async function getAblationResults() {
+  const { data } = await api.get('/models/benchmark/ablation')
+  return data
+}
+
+export async function getAvLimits() {
+  const { data } = await api.get('/models/benchmark/av-limits')
+  return data
+}
+
+export async function getModelsList() {
+  const { data } = await api.get('/models')
+  return data
+}
+
+export async function evaluateModelSandbox(text) {
+  const { data } = await api.post('/models/sandbox', { text })
   return data
 }
 
@@ -128,3 +157,38 @@ export async function adjustCampaignCluster(campaignId, action, clusterIds, reas
   })
   return data
 }
+
+// ── Security Tools & Integrations ─────────────────────────────────────────────
+
+/**
+ * GET /api/v1/tools/yara/rules
+ */
+export async function fetchYaraRules() {
+  const { data } = await api.get('/tools/yara/rules')
+  return data
+}
+
+/**
+ * POST /api/v1/tools/yara/scan
+ */
+export async function scanYara(payload) {
+  const { data } = await api.post('/tools/yara/scan', payload)
+  return data
+}
+
+/**
+ * POST /api/v1/tools/misp/export
+ */
+export async function pushMisp(payload) {
+  const { data } = await api.post('/tools/misp/export', payload)
+  return data
+}
+
+/**
+ * POST /api/v1/tools/osint/check
+ */
+export async function checkOsint(payload) {
+  const { data } = await api.post('/tools/osint/check', payload)
+  return data
+}
+

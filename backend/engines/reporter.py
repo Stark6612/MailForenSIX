@@ -123,6 +123,9 @@ def generate_dossier(data: "AnalysisResponse") -> bytes:
     story.append(header_tbl)
     story.append(Spacer(1, 8))
 
+    active_engine = getattr(data, "model_inference", None)
+    engine_str = active_engine.model_name if active_engine and active_engine.model_name else "AI Semantic Classifier"
+
     # ── RISK SUMMARY ───────────────────────────────────────────────────────────
     risk_data = [[
         Paragraph(
@@ -134,7 +137,7 @@ def generate_dossier(data: "AnalysisResponse") -> bytes:
             Paragraph(f"<b>{tier.upper()}</b>",
                       sty("Tier", fontSize=14, textColor=c(*tier_color), leading=18)),
             Paragraph(f"Threat: <b>{label.capitalize()}</b> · Confidence: <b>{int(data.confidence*100)}%</b>", NRM),
-            Paragraph(f"Engine: XGBoost + TF-IDF (ngram 1-3) + LIME", SML),
+            Paragraph(f"Engine: {engine_str} + LIME", SML),
         ],
         [
             Paragraph(f"<b>Subject:</b> {(data.subject or '—')[:55]}", SML),
@@ -219,6 +222,34 @@ def generate_dossier(data: "AnalysisResponse") -> bytes:
         story.append(auth_tbl)
     story.append(Spacer(1, 10))
 
+    # ── MODULE 5: ADRSE ACCOUNT & DOMAIN REPUTATION ────────────────────────────
+    if getattr(data, "account_reputation", None):
+        rep = data.account_reputation
+        story.append(Paragraph(f"Module 5: ADRSE Domain Reputation (Score: {rep.reputation_score:.1f}/100 · Grade: {rep.grade})", H2))
+        rep_rows = [
+            [Paragraph("<b>Reputation Factor</b>", NRM), Paragraph("<b>Score Points</b>", NRM), Paragraph("<b>Evaluation Criteria</b>", NRM)],
+            ["Reputation Grade", rep.grade, f"Composite Trust Score: {rep.reputation_score:.1f} / 100"],
+            ["SPF Factor", f"+{rep.spf_component:.1f}", "Max 25 pts (Sender Policy Framework compliance)"],
+            ["DKIM Factor", f"+{rep.dkim_component:.1f}", "Max 25 pts (Cryptographic message integrity)"],
+            ["DMARC Factor", f"+{rep.dmarc_component:.1f}", "Max 30 pts (Domain alignment and policy enforcement)"],
+            ["Alignment Factor", f"+{rep.alignment_component:.1f}", "Max 20 pts (From / Return-Path domain alignment)"],
+            ["Spoofing Penalty", f"-{rep.spoof_penalty:.1f}", "Display Name / Brand Masquerade Penalty"],
+        ]
+        rep_tbl = Table(rep_rows, colWidths=[W*0.28, W*0.22, W*0.50])
+        rep_tbl.setStyle(TableStyle([
+            ("BACKGROUND", (0,0),(-1,0), c(*_LIGHT)),
+            ("BOX",        (0,0),(-1,-1), 0.5, c(*_BORDER)),
+            ("INNERGRID",  (0,0),(-1,-1), 0.3, c(*_BORDER)),
+            ("FONTSIZE",   (0,0),(-1,-1), 8),
+            ("FONTNAME",   (0,0),(0,-1),  "Helvetica-Bold"),
+            ("TOPPADDING", (0,0),(-1,-1), 4),
+            ("BOTTOMPADDING",(0,0),(-1,-1), 4),
+            ("LEFTPADDING",(0,0),(-1,-1), 6),
+            ("ROWBACKGROUNDS",(0,1),(-1,-1), [c(1,1,1), c(*_LIGHT)]),
+        ]))
+        story.append(rep_tbl)
+        story.append(Spacer(1, 10))
+
     # ── RELAY HOPS ─────────────────────────────────────────────────────────────
     story.append(Paragraph(f"Relay Hop Chain ({len(data.relay_hops or [])} hops)", H2))
     if data.relay_hops:
@@ -282,8 +313,8 @@ def generate_dossier(data: "AnalysisResponse") -> bytes:
         ]))
         story.append(lime_tbl)
         story.append(Paragraph(
-            "LIME (Local Interpretable Model-agnostic Explanations) identifies which sentence "
-            "fragments most influenced the XGBoost classifier's verdict.", SML
+            f"LIME (Local Interpretable Model-agnostic Explanations) identifies which sentence "
+            f"fragments most influenced the {engine_str} classifier verdict.", SML
         ))
     else:
         story.append(Paragraph("No LIME explanations available.", SML))
@@ -404,7 +435,7 @@ def generate_dossier(data: "AnalysisResponse") -> bytes:
     coc_val_s = sty("COC_VAL", fontSize=7.5, leading=10, textColor=c(*_TEXT))
     coc_rows = [
         ["Tool",              Paragraph("MailForenSIX v0.4.0 (Forensic Intelligence)", coc_val_s)],
-        ["Analysis Engine",   Paragraph("XGBoost + TF-IDF (ngram 1-3) · LIME · Real-time Geo · WHOIS Domain Intel", coc_val_s)],
+        ["Analysis Engine",   Paragraph(f"{engine_str} · LIME · Real-time Geo · WHOIS Domain Intel", coc_val_s)],
         ["Timestamp",         Paragraph(ts_ist, coc_val_s)],
         ["Analysis UUID",     Paragraph(analysis_id, coc_val_s)],
         ["Evidence SHA-256",  Paragraph(sha256, sty("COC", fontSize=6.5, fontName="Courier", textColor=c(*_ACCENT)))],

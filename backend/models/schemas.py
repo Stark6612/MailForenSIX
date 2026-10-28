@@ -27,12 +27,29 @@ class RiskTier(str, Enum):
 class ThreatLabel(str, Enum):
     SAFE = "safe"
     SUSPICIOUS = "suspicious"
+    SPAM = "spam"
     PHISHING = "phishing"
     BEC = "bec"
     IMPERSONATION = "impersonation"
 
 
 # ── Sub-models ─────────────────────────────────────────────────────────────────
+
+class AccountReputation(BaseModel):
+    reputation_score: float = Field(ge=0.0, le=100.0, default=100.0)
+    grade: str = "A"
+    spf_component: float = 25.0
+    dkim_component: float = 25.0
+    dmarc_component: float = 30.0
+    alignment_component: float = 20.0
+    spoof_penalty: float = 0.0
+    summary: str = ""
+
+
+class ModelInferenceMeta(BaseModel):
+    model_name: str = "Logistic Regression"
+    model_id: str = "lr"
+    class_probabilities: dict[str, float] = {}
 
 class AuthResult(BaseModel):
     spf: AuthStatus
@@ -152,6 +169,10 @@ class AnalysisResponse(BaseModel):
 
     # CERT-In incident classification
     cert_in: Optional[CertInResult] = None
+
+    # AICS Academic Intelligence Extensions
+    account_reputation: Optional[AccountReputation] = None
+    model_inference: Optional[ModelInferenceMeta] = None
 
     # Forensic metadata
     forensic: ForensicMeta

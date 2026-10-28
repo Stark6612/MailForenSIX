@@ -25,12 +25,12 @@ export function useAnalysis() {
    */
   const [stage, setStage] = useState('')
 
-  const run = useCallback(async (emlFile, rawText) => {
+  const run = useCallback(async (emlFile, rawText, model = 'lr') => {
     setStatus(STATUS.LOADING)
     setResult(null)
     setError(null)
 
-    const stages = ['Parsing', 'Auth Validation', 'NLP Classification', 'Geo Tracing', 'Domain Intel', 'Risk Engine']
+    const stages = ['Parsing', 'Auth Validation', `AI Inference (${model.toUpperCase()})`, 'Geo Tracing', 'Domain Intel', 'Risk Engine']
     let i = 0
     const stageTimer = setInterval(() => {
       setStage(stages[i % stages.length])
@@ -38,7 +38,7 @@ export function useAnalysis() {
     }, 800)
 
     try {
-      const data = await analyzeEmail(emlFile, rawText)
+      const data = await analyzeEmail(emlFile, rawText, model)
       setResult(data)
       setStatus(STATUS.SUCCESS)
     } catch (err) {

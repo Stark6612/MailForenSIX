@@ -1,16 +1,19 @@
 """
-engines/classifier.py — Phase 2
-TF-IDF + XGBoost intent classifier with LIME sentence explanations.
+engines/classifier.py — Phase 2 & Phase 6 (AICS Multi-Model Dynamic Registry)
+Course: Artificial Intelligence for Cyber Security (23AI2001)
 
-Public API:
-    load_model()                       → loads .pkl files at startup (cached)
-    predict_intent(text)               → (ThreatLabel, confidence: float)
-    explain_sentences(body, n=8)       → list[LIMESentence]
-    model_loaded()                     → bool
-
-Models stored in:
-    backend/models/mailforensix_model.pkl
-    backend/models/tfidf_vectorizer.pkl
+Features:
+  - Multi-Model Dynamic Registry supporting:
+      * lr:  Logistic Regression (L2 Regularized Log-Odds)
+      * svm: Linear Support Vector Machine (Platt Calibrated)
+      * nb:  Multinomial Naive Bayes (Laplace Smoothed)
+      * dt:  Decision Tree (CART Gini Impurity)
+      * xgb: HistGradientBoosting Ensemble
+  - Tripartite 3-Class Classification:
+      * Class 0: Legitimate (Ham)
+      * Class 1: Spam (Commercial / Bulk)
+      * Class 2: Phishing (Credential Harvesting / BEC Fraud)
+  - Multi-Class Explainable AI (LIME) Local Surrogate Sentence Attributions.
 """
 
 from __future__ import annotations
@@ -19,240 +22,301 @@ import logging
 import os
 import re
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Dict, List, Tuple, Optional
 
 logger = logging.getLogger(__name__)
 
-# ── Model paths ────────────────────────────────────────────────────────────────
-_MODELS_DIR   = Path(__file__).resolve().parent.parent / "models"
-_MODEL_PATH   = _MODELS_DIR / "mailforensix_model.pkl"
-_VECTOR_PATH  = _MODELS_DIR / "tfidf_vectorizer.pkl"
+# ── Paths ──────────────────────────────────────────────────────────────────────
+_MODELS_DIR     = Path(__file__).resolve().parent.parent / "models"
+_AICS_DIR       = _MODELS_DIR / "aics"
+_LEGACY_MODEL   = _MODELS_DIR / "mailforensix_model.pkl"
+_LEGACY_VECTOR  = _MODELS_DIR / "tfidf_vectorizer.pkl"
 
-# ── Module-level singletons (loaded once at startup) ──────────────────────────
-_model     = None
+_AICS_VECTOR    = _AICS_DIR / "aics_tfidf_vectorizer.pkl"
+
+MODEL_METADATA = {
+    "lr": {
+        "id": "lr",
+        "name": "Logistic Regression (L2 Calibrated)",
+        "type": "Generalized Linear Model",
+        "description": "L2-regularized multinomial logistic regression with cross-entropy loss."
+    },
+    "svm": {
+        "id": "svm",
+        "name": "Linear SVM (Platt Calibrated)",
+        "type": "Maximum Margin Separator",
+        "description": "L2-regularized linear support vector machine with Platt sigmoid calibration."
+    },
+    "nb": {
+        "id": "nb",
+        "name": "Multinomial Naive Bayes",
+        "type": "Generative Probabilistic",
+        "description": "Multinomial Bayes with Laplace additive smoothing (alpha=0.1)."
+    },
+    "dt": {
+        "id": "dt",
+        "name": "Decision Tree (CART Gini)",
+        "type": "Non-Parametric Partitioning",
+        "description": "Binary recursive partition tree using Gini impurity criterion."
+    },
+    "xgb": {
+        "id": "xgb",
+        "name": "HistGradientBoosting Ensemble",
+        "type": "Ensemble Gradient Boosting",
+        "description": "Histogram-based gradient boosted decision tree ensemble."
+    }
+}
+
+CLASS_NAMES_3 = ["legitimate", "spam", "phishing"]
+
+# ── Module Singletons ──────────────────────────────────────────────────────────
+_models_registry: Dict[str, any] = {}
 _vectorizer = None
-_lime_exp   = None
-_loaded     = False
+_loaded = False
+_legacy_model = None
+_legacy_vectorizer = None
 
 
-# ── Urgency keyword list (used as extra feature) ───────────────────────────────
+# ── Domain-Specific Token Preprocessing ────────────────────────────────────────
+_HTML_TAG_RE = re.compile(r"<[^>]+>", re.IGNORECASE)
+_URL_RE      = re.compile(r"https?://\S+|www\.\S+", re.IGNORECASE)
+_IP_RE       = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
+_CURRENCY_RE = re.compile(r"[\$€£₹]\s*\d+(?:[.,]\d+)?|\b(?:usd|eur|inr|gbp|dollars?)\s*\d+\b", re.IGNORECASE)
 URGENCY_KEYWORDS = [
-    "urgent", "immediately", "verify", "account suspended", "click here",
-    "update your", "confirm your", "limited time", "expire", "winner",
-    "congratulations", "free", "prize", "password", "login", "bank",
-    "wire transfer", "invoice", "payment required", "suspended", "blocked",
-    "unusual activity", "security alert", "action required",
+    r"\burgent\b", r"\bimmediately\b", r"\bverify your\b", r"\baccount suspended\b",
+    r"\baction required\b", r"\bsecurity alert\b", r"\bunauthorized access\b",
+    r"\bconfirm your identity\b", r"\bclick here\b", r"\breset your password\b",
+    r"\blimited time\b", r"\bwire transfer\b", r"\bpayment overdue\b",
+    r"\bupdate payment\b", r"\bbank account\b", r"\blogin immediately\b",
 ]
-
-_URGENCY_RE = re.compile(
-    "|".join(re.escape(kw) for kw in URGENCY_KEYWORDS),
-    re.IGNORECASE,
-)
-_URL_RE = re.compile(r"https?://\S+|www\.\S+", re.IGNORECASE)
+_URGENCY_RE  = re.compile("|".join(URGENCY_KEYWORDS), re.IGNORECASE)
 
 
-def _feature_text(text: str) -> str:
-    """Append synthetic tokens for URL count and urgency hits so TF-IDF sees them."""
-    url_count  = len(_URL_RE.findall(text))
-    urg_count  = len(_URGENCY_RE.findall(text))
-    # Append weighted synthetic tokens
-    extras  = " URLTOKEN" * min(url_count, 10)
-    extras += " URGENCYTOKEN" * min(urg_count, 5)
-    return text + extras
+def _preprocess_aics(text: str) -> str:
+    """Preprocess email text and inject synthetic domain cyber tokens."""
+    if not isinstance(text, str) or not text.strip():
+        return ""
+    clean = _HTML_TAG_RE.sub(" ", text)
+    clean = _URL_RE.sub(" URL_TOKEN ", clean)
+    clean = _IP_RE.sub(" IP_TOKEN ", clean)
+    clean = _CURRENCY_RE.sub(" CURRENCY_TOKEN ", clean)
+    clean = _URGENCY_RE.sub(" URGENCY_TOKEN ", clean)
+    return re.sub(r"\s+", " ", clean).strip().lower()
 
 
 def load_model() -> bool:
     """
-    Load TF-IDF vectorizer + XGBoost model from disk.
-    Safe to call multiple times — loads only once.
-    Returns True if models loaded, False if .pkl files missing.
+    Load AICS multi-model suite and fallback vectorizers.
+    Safe to call multiple times (cached).
     """
-    global _model, _vectorizer, _lime_exp, _loaded
+    global _models_registry, _vectorizer, _legacy_model, _legacy_vectorizer, _loaded
 
     if _loaded:
         return True
 
-    if not _MODEL_PATH.exists() or not _VECTOR_PATH.exists():
-        logger.warning(
-            "[classifier] Model .pkl files not found — running in stub mode. "
-            "Run: python scripts/train_classifier.py"
-        )
-        return False
+    import joblib
 
-    try:
-        import joblib
-        from lime.lime_text import LimeTextExplainer
+    # 1. Try loading AICS 3-Class Models
+    if _AICS_VECTOR.exists():
+        try:
+            logger.info("[classifier] Loading AICS TF-IDF Vectorizer...")
+            _vectorizer = joblib.load(_AICS_VECTOR)
 
-        logger.info("[classifier] Loading TF-IDF vectorizer…")
-        _vectorizer = joblib.load(_VECTOR_PATH)
+            for mid in ["lr", "svm", "nb", "dt", "xgb"]:
+                mpath = _AICS_DIR / f"{mid}.pkl"
+                if mpath.exists():
+                    logger.info(f"[classifier] Loading AICS model: {mid} ({MODEL_METADATA[mid]['name']})...")
+                    _models_registry[mid] = joblib.load(mpath)
 
-        logger.info("[classifier] Loading XGBoost model…")
-        _model = joblib.load(_MODEL_PATH)
+            if _models_registry:
+                _loaded = True
+                logger.info(f"[classifier] Successfully loaded {len(_models_registry)} AICS models.")
+        except Exception as exc:
+            logger.error(f"[classifier] Error loading AICS models: {exc}")
 
-        logger.info("[classifier] Initialising LIME explainer…")
-        _lime_exp = LimeTextExplainer(class_names=["ham", "phishing"])
+    # 2. Try loading legacy model if available as fallback
+    if _LEGACY_MODEL.exists() and _LEGACY_VECTOR.exists():
+        try:
+            _legacy_vectorizer = joblib.load(_LEGACY_VECTOR)
+            _legacy_model      = joblib.load(_LEGACY_MODEL)
+            if not _loaded:
+                _loaded = True
+        except Exception as exc:
+            logger.warning(f"[classifier] Error loading legacy model: {exc}")
 
-        _loaded = True
-        logger.info("[classifier] Phase 2 ML models loaded ✓")
-        return True
-
-    except Exception as exc:
-        logger.error(f"[classifier] Failed to load models: {exc}")
-        return False
+    return _loaded
 
 
 def model_loaded() -> bool:
     return _loaded
 
 
-def predict_intent(text: str) -> tuple[str, float]:
-    """
-    Returns (threat_label, confidence) where threat_label is one of:
-      'safe' | 'suspicious' | 'phishing'
+def get_available_models() -> List[Dict]:
+    """Returns list of active models in registry."""
+    available = []
+    for mid, meta in MODEL_METADATA.items():
+        if mid in _models_registry:
+            available.append(meta)
+    return available
 
-    Falls back to heuristic stub when model is not loaded.
+
+def predict_intent(
+    text: str,
+    model_id: str = "lr"
+) -> Tuple[str, float, Dict[str, float], str]:
+    """
+    Executes tripartite intent prediction using the requested model.
+    Returns:
+      (threat_label: str, confidence: float, class_probs: dict, model_name: str)
+      where threat_label is 'safe' (legitimate), 'spam', or 'phishing'.
     """
     if not _loaded:
-        return _heuristic_predict(text)
+        label, conf = _heuristic_predict(text)
+        return label, conf, {label: conf}, "Heuristic Stub Engine"
+
+    # Select model from registry
+    target_id = model_id.lower() if model_id and model_id.lower() in _models_registry else "lr"
+    model = _models_registry.get(target_id)
+    meta  = MODEL_METADATA.get(target_id, {"name": "Default Classifier"})
+
+    if model is None and _legacy_model is not None:
+        # Fallback to legacy binary model
+        try:
+            X = _legacy_vectorizer.transform([text])
+            prob = float(_legacy_model.predict_proba(X)[0][1])
+            lbl = "phishing" if prob >= 0.70 else ("suspicious" if prob >= 0.40 else "safe")
+            return lbl, round(prob, 4), {"phishing": prob, "safe": 1 - prob}, "Legacy XGBoost"
+        except Exception:
+            label, conf = _heuristic_predict(text)
+            return label, conf, {label: conf}, "Heuristic Stub Engine"
+
+    if model is None:
+        label, conf = _heuristic_predict(text)
+        return label, conf, {label: conf}, "Heuristic Stub Engine"
 
     try:
-        feat = _feature_text(text)
-        X    = _vectorizer.transform([feat])
-        prob = float(_model.predict_proba(X)[0][1])   # P(phishing)
+        clean = _preprocess_aics(text)
+        X     = _vectorizer.transform([clean])
 
-        if prob >= 0.75:
-            label = "phishing"
-        elif prob >= 0.45:
-            label = "suspicious"
+        if isinstance(model, dict) and "model" in model and "selector" in model:
+            X_dense = model["selector"].transform(X).toarray()
+            probs = model["model"].predict_proba(X_dense)[0]
         else:
-            label = "safe"
+            probs = model.predict_proba(X)[0]
 
-        return label, round(prob, 4)
+        p_legit = float(probs[0])
+        p_spam  = float(probs[1])
+        p_phish = float(probs[2])
+
+        class_probs = {
+            "legitimate": round(p_legit, 4),
+            "spam":       round(p_spam, 4),
+            "phishing":   round(p_phish, 4),
+        }
+
+        # Argmax selection
+        max_idx = int(probs.argmax())
+        confidence = round(float(probs[max_idx]), 4)
+
+        if max_idx == 2:
+            threat_label = "phishing"
+        elif max_idx == 1:
+            threat_label = "spam"
+        else:
+            threat_label = "safe"
+
+        return threat_label, confidence, class_probs, meta["name"]
 
     except Exception as exc:
-        logger.error(f"[classifier] predict_intent error: {exc}")
-        return _heuristic_predict(text)
+        logger.error(f"[classifier] predict_intent error ({target_id}): {exc}")
+        label, conf = _heuristic_predict(text)
+        return label, conf, {label: conf}, "Heuristic Stub Engine"
 
 
-# ── Artifact filter — tokens that are never meaningful explanations ────────────
-_ARTIFACT_RE = re.compile(
-    r'^(and|or|the|a|an|is|it|in|of|to|for|on|at|by|with|from|this|that|'
-    r'be|are|was|were|has|have|had|do|did|not|but|if|as|so|we|you|they|'
-    r'he|she|re|cc|bcc|br|hr|td|tr|th|div|span|nbsp|http|https|www|'
-    r'[0-9]+|[^a-z]{1,2})$',
-    re.IGNORECASE,
-)
-
-
-def _split_sentences(body: str) -> list[str]:
-    """
-    Split email body into meaningful sentence units.
-    Filters out HTML artifacts, very short fragments, and whitespace noise.
-    """
-    # Strip HTML tags
-    clean = re.sub(r'<[^>]+>', ' ', body)
-    # Normalize whitespace
-    clean = re.sub(r'[ \t]+', ' ', clean)
-    # Split on sentence-ending punctuation or newlines
-    raw = re.split(r'(?<=[.!?])\s+|\n{1,}', clean)
+def _split_sentences(body: str) -> List[str]:
+    """Split email body into semantic sentence segments."""
+    clean = _HTML_TAG_RE.sub(" ", body)
+    clean = re.sub(r"[ \t]+", " ", clean)
+    raw = re.split(r"(?<=[.!?])\s+|\n{1,}", clean)
     sentences = []
     for s in raw:
         s = s.strip()
-        # Must be 15+ chars and contain at least 2 words to be a useful sentence
-        if len(s) >= 15 and len(s.split()) >= 2:
-            sentences.append(s[:200])  # cap length for display
+        if len(s) >= 12 and len(s.split()) >= 2:
+            sentences.append(s[:220])
     return sentences
 
 
-def explain_sentences(body: str, n: int = 8) -> list[dict]:
+def explain_sentences(
+    body: str,
+    model_id: str = "lr",
+    n: int = 8
+) -> List[Dict]:
     """
-    Returns list of dicts: [{text, score, explanation}]
-
-    Strategy (Bug 1 + 2 fix):
-    1. Split body into REAL sentences (not individual words).
-    2. Run LIME with sentence-as-token mode by joining sentences as the
-       vocabulary units, using split_expression to preserve them.
-    3. Filter out HTML artifacts and stop-words.
-    4. Only return PHISHING-POSITIVE items (weight > 0).
-    5. Normalize scores relative to the strongest signal found.
+    Generates multi-class LIME sentence-level explanations.
+    Surfaces the exact sentence units driving the threat prediction.
     """
     if not _loaded or not body or not body.strip():
         return _heuristic_lime(body, n)
 
+    target_id = model_id.lower() if model_id and model_id.lower() in _models_registry else "lr"
+    model = _models_registry.get(target_id)
+    if model is None:
+        return _heuristic_lime(body, n)
+
     try:
         sentences = _split_sentences(body)
-
-        # If body doesn't have enough real sentences, fall back to heuristic
         if len(sentences) < 2:
             return _heuristic_lime(body, n)
 
-        # Build a "sentence-tokenized" version of the text for LIME
-        # LIME will treat each sentence as a token and perturb by masking them
         sentence_body = "\n".join(sentences)
 
-        # Sentence-level predict function — masks whole sentences, not words
         def _predict_sentence_proba(texts):
-            # texts are the perturbed versions (some sentences blanked out)
-            X = _vectorizer.transform([_feature_text(t) for t in texts])
-            return _model.predict_proba(X)
+            cleaned = [_preprocess_aics(t) for t in texts]
+            X = _vectorizer.transform(cleaned)
+            if isinstance(model, dict) and "model" in model and "selector" in model:
+                X_dense = model["selector"].transform(X).toarray()
+                return model["model"].predict_proba(X_dense)
+            return model.predict_proba(X)
 
         from lime.lime_text import LimeTextExplainer
         sent_explainer = LimeTextExplainer(
-            class_names=["ham", "phishing"],
-            split_expression=r'\n',   # treat each newline-separated sentence as one token
+            class_names=CLASS_NAMES_3,
+            split_expression=r"\n",
+            random_state=42
         )
+
+        # Explain the dominant predicted class
+        probs = _predict_sentence_proba([sentence_body])[0]
+        top_class = int(probs.argmax())
 
         exp = sent_explainer.explain_instance(
             sentence_body,
             _predict_sentence_proba,
-            num_features=min(n + 4, len(sentences)),  # ask for extra, filter after
-            num_samples=300,
-            labels=(1,),
+            labels=(top_class,),
+            num_features=min(n + 3, len(sentences)),
+            num_samples=180
         )
 
-        raw_list = exp.as_list(label=1)  # [(sentence_text, weight), ...]
+        raw_list = exp.as_list(label=top_class)
+        if not raw_list:
+            return _heuristic_lime(body, n)
 
-        # Filter: keep only phishing-positive, non-artifact entries
-        positive = [
-            (text.strip(), weight)
-            for text, weight in raw_list
-            if weight > 0
-            and not _ARTIFACT_RE.match(text.strip())
-            and len(text.strip()) >= 10
-        ]
-
-        if not positive:
-            # All signals were negative (ham email) — return top negative with proper label
-            all_items = [
-                (text.strip(), weight)
-                for text, weight in raw_list
-                if not _ARTIFACT_RE.match(text.strip())
-                and len(text.strip()) >= 10
-            ]
-            positive = sorted(all_items, key=lambda x: x[1], reverse=True)[:n]
-
-        # Normalize: express each score relative to max weight (0–100%)
-        if positive:
-            max_weight = max(abs(w) for _, w in positive) or 1.0
-        else:
-            max_weight = 1.0
+        max_weight = max(abs(w[1]) for w in raw_list) or 1.0
 
         results = []
-        for text, weight in sorted(positive, key=lambda x: x[1], reverse=True)[:n]:
-            normalized = round(min(abs(weight) / max_weight, 1.0), 4)
-            if weight > 0.5:
-                explanation = "Strongly indicates phishing"
-            elif weight > 0.2:
-                explanation = "High phishing signal — key phrase detected"
-            elif weight > 0.0:
-                explanation = "Moderately suspicious language"
+        for text, weight in sorted(raw_list, key=lambda x: abs(x[1]), reverse=True)[:n]:
+            norm_score = round(min(abs(weight) / max_weight, 1.0), 4)
+            if top_class == 2:  # Phishing
+                exp_text = "Strongly indicates credential phishing" if weight > 0 else "Mitigates phishing risk"
+            elif top_class == 1:  # Spam
+                exp_text = "Commercial marketing / bulk spam trigger" if weight > 0 else "Neutral phrase"
             else:
-                explanation = "Reduces phishing probability"
+                exp_text = "Legitimate business phrasing" if weight > 0 else "Unusual phrasing"
 
             results.append({
-                "text":        text,
-                "score":       normalized,
-                "explanation": explanation,
+                "text": text.strip(),
+                "score": norm_score,
+                "explanation": exp_text
             })
 
         return results if results else _heuristic_lime(body, n)
@@ -262,39 +326,30 @@ def explain_sentences(body: str, n: int = 8) -> list[dict]:
         return _heuristic_lime(body, n)
 
 
-# ── Heuristic fallbacks (when model not loaded) ────────────────────────────────
+# ── Heuristic Fallback Methods ─────────────────────────────────────────────────
 
-def _heuristic_predict(text: str) -> tuple[str, float]:
-    """Simple keyword + URL heuristic. Used when .pkl not loaded."""
+def _heuristic_predict(text: str) -> Tuple[str, float]:
     url_count  = len(_URL_RE.findall(text))
     urg_count  = len(_URGENCY_RE.findall(text))
-    score      = min((url_count * 0.05) + (urg_count * 0.08), 0.95)
-
+    score      = min((url_count * 0.08) + (urg_count * 0.12), 0.95)
     if score >= 0.60:
         return "phishing", round(score, 4)
     elif score >= 0.30:
-        return "suspicious", round(score, 4)
+        return "spam", round(score, 4)
     return "safe", round(score, 4)
 
 
-def _heuristic_lime(body: str, n: int) -> list[dict]:
-    """Keyword-based sentence highlights. Used when LIME not available."""
+def _heuristic_lime(body: str, n: int) -> List[Dict]:
     if not body:
         return [{"text": "[no body]", "score": 0.0, "explanation": "Empty email body."}]
-
     results = []
     sentences = [s.strip() for s in re.split(r"[.!?\n]", body) if len(s.strip()) > 8]
     for sent in sentences[:n]:
         hits = _URGENCY_RE.findall(sent)
         urls = _URL_RE.findall(sent)
-        score = min(len(hits) * 0.15 + len(urls) * 0.10, 1.0)
-        if hits or urls:
-            exp = f"Contains: {', '.join(set(h.lower() for h in hits))}" if hits else f"Contains URL"
-        else:
-            exp = "No strong phishing signals"
+        score = min(len(hits) * 0.20 + len(urls) * 0.15, 1.0)
+        exp = f"Urgency cue: {', '.join(set(h.lower() for h in hits))}" if hits else ("Contains URL link" if urls else "Benign phrasing")
         results.append({"text": sent[:120], "score": round(score, 4), "explanation": exp})
-
     if not results:
-        results.append({"text": body[:120], "score": 0.0, "explanation": "No phishing signals detected."})
-
+        results.append({"text": body[:120], "score": 0.0, "explanation": "No threat signals identified."})
     return sorted(results, key=lambda x: x["score"], reverse=True)[:n]

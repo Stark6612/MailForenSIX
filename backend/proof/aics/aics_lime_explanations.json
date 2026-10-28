@@ -1,0 +1,350 @@
+[
+  {
+    "sample_id": "SAMPLE_PHISHING",
+    "category": "Credential Phishing & Security Alert",
+    "text": "Mail Security Team: Dear user, most of your incoming mailbox messages are on pending status due to mail session expiration issues. Action required: Please click here to verify your identity and confirm your account credentials immediately to prevent mailbox deactivation: http://mail-security-verification.org/login. Unauthorized access has been detected.",
+    "ground_truth": "Phishing",
+    "prediction": "Phishing",
+    "probabilities": {
+      "Legitimate": 0.0439,
+      "Spam": 0.151,
+      "Phishing": 0.8051
+    },
+    "lime_attributions": {
+      "Legitimate": [
+        {
+          "token": "account",
+          "weight": -0.05438
+        },
+        {
+          "token": "immediately",
+          "weight": -0.04648
+        },
+        {
+          "token": "mailbox",
+          "weight": -0.04535
+        },
+        {
+          "token": "click",
+          "weight": -0.04508
+        },
+        {
+          "token": "http",
+          "weight": 0.043
+        },
+        {
+          "token": "issues",
+          "weight": 0.03992
+        },
+        {
+          "token": "messages",
+          "weight": 0.01914
+        },
+        {
+          "token": "Team",
+          "weight": 0.01607
+        }
+      ],
+      "Spam": [
+        {
+          "token": "http",
+          "weight": 0.24925
+        },
+        {
+          "token": "mailbox",
+          "weight": -0.1315
+        },
+        {
+          "token": "account",
+          "weight": -0.11808
+        },
+        {
+          "token": "here",
+          "weight": 0.07348
+        },
+        {
+          "token": "confirm",
+          "weight": -0.06973
+        },
+        {
+          "token": "identity",
+          "weight": -0.05399
+        },
+        {
+          "token": "Security",
+          "weight": -0.04251
+        },
+        {
+          "token": "your",
+          "weight": 0.03263
+        }
+      ],
+      "Phishing": [
+        {
+          "token": "http",
+          "weight": -0.30404
+        },
+        {
+          "token": "mailbox",
+          "weight": 0.16711
+        },
+        {
+          "token": "account",
+          "weight": 0.15876
+        },
+        {
+          "token": "here",
+          "weight": -0.08654
+        },
+        {
+          "token": "confirm",
+          "weight": 0.0784
+        },
+        {
+          "token": "identity",
+          "weight": 0.06377
+        },
+        {
+          "token": "Security",
+          "weight": 0.05005
+        },
+        {
+          "token": "pending",
+          "weight": 0.04351
+        }
+      ]
+    }
+  },
+  {
+    "sample_id": "SAMPLE_SPAM",
+    "category": "Commercial Marketing Spam",
+    "text": "CONGRATULATIONS! You have been selected to win a free $5,000 cash voucher and luxury gift card. Limited time discount offer for approved subscribers! Claim your exclusive prize today. Visit our retail shopping bonus site: http://best-deals-super-promo.org/claim. No credit check required. Unsubscribe at any time.",
+    "ground_truth": "Spam",
+    "prediction": "Spam",
+    "probabilities": {
+      "Legitimate": 0.0023,
+      "Spam": 0.9013,
+      "Phishing": 0.0963
+    },
+    "lime_attributions": {
+      "Legitimate": [
+        {
+          "token": "offer",
+          "weight": -0.01219
+        },
+        {
+          "token": "Limited",
+          "weight": -0.01105
+        },
+        {
+          "token": "CONGRATULATIONS",
+          "weight": 0.01
+        },
+        {
+          "token": "site",
+          "weight": -0.00891
+        },
+        {
+          "token": "free",
+          "weight": -0.0088
+        },
+        {
+          "token": "check",
+          "weight": -0.00866
+        },
+        {
+          "token": "approved",
+          "weight": -0.00825
+        },
+        {
+          "token": "card",
+          "weight": -0.00678
+        }
+      ],
+      "Spam": [
+        {
+          "token": "http",
+          "weight": 0.46813
+        },
+        {
+          "token": "gift",
+          "weight": -0.07571
+        },
+        {
+          "token": "retail",
+          "weight": -0.05935
+        },
+        {
+          "token": "win",
+          "weight": 0.0526
+        },
+        {
+          "token": "5",
+          "weight": 0.04598
+        },
+        {
+          "token": "CONGRATULATIONS",
+          "weight": 0.04481
+        },
+        {
+          "token": "exclusive",
+          "weight": 0.04238
+        },
+        {
+          "token": "check",
+          "weight": 0.02983
+        }
+      ],
+      "Phishing": [
+        {
+          "token": "http",
+          "weight": -0.46537
+        },
+        {
+          "token": "gift",
+          "weight": 0.07383
+        },
+        {
+          "token": "retail",
+          "weight": 0.0587
+        },
+        {
+          "token": "CONGRATULATIONS",
+          "weight": -0.05531
+        },
+        {
+          "token": "win",
+          "weight": -0.05089
+        },
+        {
+          "token": "Claim",
+          "weight": 0.04424
+        },
+        {
+          "token": "5",
+          "weight": -0.04419
+        },
+        {
+          "token": "exclusive",
+          "weight": -0.03795
+        }
+      ]
+    }
+  },
+  {
+    "sample_id": "SAMPLE_LEGITIMATE",
+    "category": "Legitimate Corporate Communication",
+    "text": "Hi team, please find attached the quarterly financial summary report and meeting minutes from yesterday's project alignment review. We have finalized the sprint deliverables for Q4. Please review the slide deck on the internal company drive and let me know if you have any questions before Friday's standup.",
+    "ground_truth": "Legitimate",
+    "prediction": "Legitimate",
+    "probabilities": {
+      "Legitimate": 0.9808,
+      "Spam": 0.003,
+      "Phishing": 0.0162
+    },
+    "lime_attributions": {
+      "Legitimate": [
+        {
+          "token": "attached",
+          "weight": 0.06877
+        },
+        {
+          "token": "questions",
+          "weight": 0.05558
+        },
+        {
+          "token": "Friday",
+          "weight": 0.05312
+        },
+        {
+          "token": "know",
+          "weight": 0.04681
+        },
+        {
+          "token": "summary",
+          "weight": 0.04494
+        },
+        {
+          "token": "minutes",
+          "weight": -0.04064
+        },
+        {
+          "token": "meeting",
+          "weight": 0.03653
+        },
+        {
+          "token": "team",
+          "weight": 0.03591
+        }
+      ],
+      "Spam": [
+        {
+          "token": "know",
+          "weight": -0.01543
+        },
+        {
+          "token": "team",
+          "weight": -0.01289
+        },
+        {
+          "token": "Friday",
+          "weight": -0.0106
+        },
+        {
+          "token": "questions",
+          "weight": -0.01026
+        },
+        {
+          "token": "summary",
+          "weight": -0.01021
+        },
+        {
+          "token": "review",
+          "weight": -0.01006
+        },
+        {
+          "token": "let",
+          "weight": -0.00935
+        },
+        {
+          "token": "meeting",
+          "weight": -0.00908
+        }
+      ],
+      "Phishing": [
+        {
+          "token": "attached",
+          "weight": -0.0568
+        },
+        {
+          "token": "questions",
+          "weight": -0.0439
+        },
+        {
+          "token": "Friday",
+          "weight": -0.03912
+        },
+        {
+          "token": "minutes",
+          "weight": 0.03661
+        },
+        {
+          "token": "summary",
+          "weight": -0.03332
+        },
+        {
+          "token": "know",
+          "weight": -0.03288
+        },
+        {
+          "token": "meeting",
+          "weight": -0.02536
+        },
+        {
+          "token": "project",
+          "weight": -0.02363
+        }
+      ]
+    }
+  }
+]

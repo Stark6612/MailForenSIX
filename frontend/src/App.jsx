@@ -16,12 +16,14 @@ import PipelineProgress from './components/PipelineProgress'
 import ErrorBanner from './components/ErrorBanner'
 import ScrollReveal from './components/animations/ScrollReveal'
 import Campaign from './pages/Campaign'
+import ModelComparison from './pages/ModelComparison'
 
 export default function App() {
-  const [airGapped, setAirGapped] = useState(false)
-  const [emlFile,   setEmlFile]   = useState(null)
-  const [rawText,   setRawText]   = useState('')
-  const [page,      setPage]      = useState('triage')  // 'triage' | 'campaign'
+  const [airGapped,      setAirGapped]      = useState(false)
+  const [emlFile,        setEmlFile]        = useState(null)
+  const [rawText,        setRawText]        = useState('')
+  const [page,           setPage]           = useState('triage')  // 'triage' | 'campaign' | 'models'
+  const [selectedModel,  setSelectedModel]  = useState('lr')      // 'lr' | 'svm' | 'nb' | 'dt' | 'xgb'
   const analyzeRef   = useRef(null)
   const timeoutRef   = useRef(null)    // Phase 4 — 60s timeout guard
   const exportingRef = useRef(false)   // prevent double-trigger
@@ -41,9 +43,9 @@ export default function App() {
         toast.error('Analysis timed out after 60 seconds. The backend may be overloaded.', { duration: 6000 })
       }
     }, 60_000)
-    await run(emlFile, rawText || null)
+    await run(emlFile, rawText || null, selectedModel)
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
-  }, [emlFile, rawText, run, reset, status])
+  }, [emlFile, rawText, selectedModel, run, reset, status])
 
   /* ── Keyboard shortcuts ─────────────────────────────────────────────────── */
   useEffect(() => {
@@ -119,11 +121,15 @@ export default function App() {
 
       {/* Mode tabs */}
       <div style={{ display: "flex", gap: 0, borderBottom: "1px solid rgba(255,255,255,0.06)", background: "#0f0f1a" }}>
-        {[{key:"triage",label:"Mode 1 - Email Triage"},{key:"campaign",label:"Mode 2 - Campaign Intelligence"}].map(tab => (
+        {[
+          { key: "triage",   label: "Mode 1 — Email Triage & Threat Analysis" },
+          { key: "campaign", label: "Mode 2 — Campaign Intelligence (UMAP/HDBSCAN)" },
+          { key: "models",   label: "Mode 3 — AICS Model Benchmark & Comparison" }
+        ].map(tab => (
           <button key={tab.key} onClick={() => setPage(tab.key)} style={{
-            padding: "0.5rem 1.25rem", fontSize: "0.78rem", fontWeight: 600,
+            padding: "0.6rem 1.4rem", fontSize: "0.82rem", fontWeight: 600,
             background: "transparent", border: "none", cursor: "pointer",
-            color: page === tab.key ? "#818cf8" : "#6b7280",
+            color: page === tab.key ? "#818cf8" : "#94a3b8",
             borderBottom: page === tab.key ? "2px solid #818cf8" : "2px solid transparent",
             transition: "all 0.15s",
           }}>{tab.label}</button>
@@ -131,8 +137,9 @@ export default function App() {
       </div>
 
       {page === "campaign" && <Campaign />}
+      {page === "models" && <ModelComparison />}
 
-      {page !== "campaign" && <main className="flex-1 px-6 py-4 w-full">
+      {page === "triage" && <main className="flex-1 px-6 py-4 w-full">
 
         {/* ── Upload zone + analyze trigger ──────────────────────────── */}
         <UploadZone
@@ -143,6 +150,8 @@ export default function App() {
           onAnalyze={handleAnalyze}
           isLoading={isLoading}
           onReset={reset}
+          selectedModel={selectedModel}
+          onModelChange={setSelectedModel}
         />
 
         {/* ── Pipeline progress ───────────────────────────────────────── */}

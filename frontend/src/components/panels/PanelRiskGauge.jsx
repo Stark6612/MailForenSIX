@@ -68,21 +68,62 @@ export default function PanelRiskGauge({ data, loading }) {
         />
       </div>
 
-      {/* Verdict badge */}
-      <span className={`badge ${style.badge} mb-3`}>{style.label}</span>
+      {/* Verdict badge + Model Name */}
+      <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+        <span className={`badge ${style.badge}`}>{style.label}</span>
+        {data?.model_inference?.model_name && (
+          <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/25 text-indigo-300">
+            🤖 {data.model_inference.model_name}
+          </span>
+        )}
+      </div>
 
       {/* Threat details */}
       <div className="divider" />
       <div className="grid grid-cols-2 gap-2 text-xs">
         <div>
-          <p className="text-mfx-muted mb-0.5">Threat Type</p>
+          <p className="text-mfx-muted mb-0.5">Threat Classification</p>
           <p className="font-semibold text-mfx-text">{label}</p>
         </div>
         <div>
-          <p className="text-mfx-muted mb-0.5">ML Confidence</p>
+          <p className="text-mfx-muted mb-0.5">Confidence Score</p>
           <p className={`font-semibold ${style.color}`}>{conf}</p>
         </div>
       </div>
+
+      {/* AICS 3-Class Probability Distribution Bar */}
+      {data?.model_inference?.class_probabilities && (
+        <div className="mt-2.5 pt-2 border-t border-mfx-border/50 space-y-1">
+          <div className="flex items-center justify-between text-[11px] text-mfx-muted">
+            <span className="font-semibold text-[10px] uppercase tracking-wider">3-Class Posterior Probabilities</span>
+            <span className="font-mono text-[10px]">AICS Module 2</span>
+          </div>
+
+          <div className="h-2 w-full rounded-full bg-slate-900 flex overflow-hidden border border-white/10">
+            <div
+              style={{ width: `${(data.model_inference.class_probabilities.legitimate || 0) * 100}%` }}
+              className="bg-emerald-500 transition-all duration-500"
+              title={`Legitimate: ${((data.model_inference.class_probabilities.legitimate || 0) * 100).toFixed(1)}%`}
+            />
+            <div
+              style={{ width: `${(data.model_inference.class_probabilities.spam || 0) * 100}%` }}
+              className="bg-amber-500 transition-all duration-500"
+              title={`Spam: ${((data.model_inference.class_probabilities.spam || 0) * 100).toFixed(1)}%`}
+            />
+            <div
+              style={{ width: `${(data.model_inference.class_probabilities.phishing || 0) * 100}%` }}
+              className="bg-rose-500 transition-all duration-500"
+              title={`Phishing: ${((data.model_inference.class_probabilities.phishing || 0) * 100).toFixed(1)}%`}
+            />
+          </div>
+
+          <div className="flex justify-between items-center text-[10px] font-mono pt-0.5">
+            <span className="text-emerald-400">Legit: {((data.model_inference.class_probabilities.legitimate || 0) * 100).toFixed(1)}%</span>
+            <span className="text-amber-400">Spam: {((data.model_inference.class_probabilities.spam || 0) * 100).toFixed(1)}%</span>
+            <span className="text-rose-400">Phish: {((data.model_inference.class_probabilities.phishing || 0) * 100).toFixed(1)}%</span>
+          </div>
+        </div>
+      )}
 
       {/* 4-Pillar Risk Vector Breakdown Chart */}
       {data?.risk_breakdown && (

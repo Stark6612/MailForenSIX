@@ -1,0 +1,1 @@
+# AICS Proof directory placeholder

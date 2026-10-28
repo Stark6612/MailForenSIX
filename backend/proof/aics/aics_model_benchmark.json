@@ -1,0 +1,157 @@
+{
+  "Multinomial_Naive_Bayes": {
+    "name": "Multinomial Naive Bayes",
+    "color": "#3b82f6",
+    "accuracy": 0.8758,
+    "macro_precision": 0.8753,
+    "macro_recall": 0.8758,
+    "macro_f1": 0.8741,
+    "macro_auc": 0.966,
+    "f1_legitimate": 0.9464,
+    "f1_spam": 0.8485,
+    "f1_phishing": 0.8275,
+    "inference_latency_us": 3.4,
+    "model_size_kb": 469.5,
+    "confusion_matrix": [
+      [
+        2047,
+        10,
+        20
+      ],
+      [
+        86,
+        1786,
+        206
+      ],
+      [
+        116,
+        336,
+        1626
+      ]
+    ]
+  },
+  "Support_Vector_Machine": {
+    "name": "Linear SVM (Calibrated)",
+    "color": "#10b981",
+    "accuracy": 0.9328,
+    "macro_precision": 0.933,
+    "macro_recall": 0.9328,
+    "macro_f1": 0.9328,
+    "macro_auc": 0.9886,
+    "f1_legitimate": 0.9749,
+    "f1_spam": 0.9108,
+    "f1_phishing": 0.9128,
+    "inference_latency_us": 5.8,
+    "model_size_kb": 235.7,
+    "confusion_matrix": [
+      [
+        2020,
+        25,
+        32
+      ],
+      [
+        28,
+        1878,
+        172
+      ],
+      [
+        19,
+        143,
+        1916
+      ]
+    ]
+  },
+  "Logistic_Regression": {
+    "name": "Logistic Regression (L2)",
+    "color": "#8b5cf6",
+    "accuracy": 0.9334,
+    "macro_precision": 0.9334,
+    "macro_recall": 0.9334,
+    "macro_f1": 0.9334,
+    "macro_auc": 0.9903,
+    "f1_legitimate": 0.9733,
+    "f1_spam": 0.9132,
+    "f1_phishing": 0.9138,
+    "inference_latency_us": 2.2,
+    "model_size_kb": 235.2,
+    "confusion_matrix": [
+      [
+        2023,
+        27,
+        27
+      ],
+      [
+        28,
+        1888,
+        162
+      ],
+      [
+        29,
+        142,
+        1907
+      ]
+    ]
+  },
+  "Decision_Tree": {
+    "name": "Decision Tree (CART)",
+    "color": "#f59e0b",
+    "accuracy": 0.8359,
+    "macro_precision": 0.8484,
+    "macro_recall": 0.8359,
+    "macro_f1": 0.8372,
+    "macro_auc": 0.9193,
+    "f1_legitimate": 0.8816,
+    "f1_spam": 0.8208,
+    "f1_phishing": 0.8091,
+    "inference_latency_us": 5.5,
+    "model_size_kb": 126.7,
+    "confusion_matrix": [
+      [
+        1754,
+        65,
+        258
+      ],
+      [
+        75,
+        1585,
+        418
+      ],
+      [
+        73,
+        134,
+        1871
+      ]
+    ]
+  },
+  "Gradient_Boosted_Trees": {
+    "name": "HistGradientBoosting",
+    "color": "#ef4444",
+    "accuracy": 0.9122,
+    "macro_precision": 0.9131,
+    "macro_recall": 0.9122,
+    "macro_f1": 0.9126,
+    "macro_auc": 0.9866,
+    "f1_legitimate": 0.959,
+    "f1_spam": 0.8882,
+    "f1_phishing": 0.8905,
+    "inference_latency_us": 1015.6,
+    "model_size_kb": 3311.9,
+    "confusion_matrix": [
+      [
+        1965,
+        63,
+        49
+      ],
+      [
+        29,
+        1871,
+        178
+      ],
+      [
+        27,
+        201,
+        1850
+      ]
+    ]
+  }
+}

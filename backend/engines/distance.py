@@ -1,4 +1,4 @@
-﻿"""
+"""
 engines/distance.py
 --------------------
 Pairwise distance matrix computation for Mode 2 campaign clustering.
@@ -24,12 +24,12 @@ from typing import List, Set
 
 
 def _jaccard(a: set, b: set) -> float:
-    """Jaccard distance: 1 - |A intersect B| / |A union B|. Returns 1.0 if both empty."""
+    """Jaccard distance: 1 - |A intersect B| / |A union B|. Returns 0.5 if both empty (neutral signal)."""
     if not a and not b:
-        return 1.0   # no infrastructure info -> treat as maximally distant
+        return 0.5   # Neutral: missing infrastructure on both ends should not artificially maximize distance
     u = len(a | b)
     if u == 0:
-        return 1.0
+        return 0.5
     return 1.0 - len(a & b) / u
 
 

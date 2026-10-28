@@ -57,6 +57,48 @@ export default function PanelAuthMatrix({ data, loading }) {
         <AuthRow protocol="DMARC" status={auth.dmarc ?? 'none'} />
       </div>
 
+      {/* Module 5 ADRSE Account Reputation Score & Grade */}
+      {data?.account_reputation && (
+        <div className="mt-3 p-2.5 rounded-lg bg-indigo-500/10 border border-indigo-500/30">
+          <div className="flex items-center justify-between text-xs mb-1.5 flex-wrap gap-1">
+            <span className="font-semibold text-indigo-300 uppercase tracking-wider text-[11px] flex items-center gap-1">
+              <span>🛡️</span> ADRSE Domain Trust (Module 5)
+            </span>
+            <span className={`px-2 py-0.5 rounded text-xs font-bold ${
+              data.account_reputation.grade === 'A' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
+              data.account_reputation.grade === 'B' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
+              data.account_reputation.grade === 'C' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
+              'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+            }`}>
+              Grade {data.account_reputation.grade} ({data.account_reputation.reputation_score.toFixed(0)}/100)
+            </span>
+          </div>
+          <div className="grid grid-cols-4 gap-1 text-[10px] font-mono text-center pt-1">
+            <div className="bg-slate-900/60 p-1 rounded border border-white/5">
+              <span className="text-slate-400 block">SPF</span>
+              <span className="text-emerald-400 font-bold">+{data.account_reputation.spf_component}</span>
+            </div>
+            <div className="bg-slate-900/60 p-1 rounded border border-white/5">
+              <span className="text-slate-400 block">DKIM</span>
+              <span className="text-emerald-400 font-bold">+{data.account_reputation.dkim_component}</span>
+            </div>
+            <div className="bg-slate-900/60 p-1 rounded border border-white/5">
+              <span className="text-slate-400 block">DMARC</span>
+              <span className="text-emerald-400 font-bold">+{data.account_reputation.dmarc_component}</span>
+            </div>
+            <div className="bg-slate-900/60 p-1 rounded border border-white/5">
+              <span className="text-slate-400 block">ALIGN</span>
+              <span className="text-emerald-400 font-bold">+{data.account_reputation.alignment_component}</span>
+            </div>
+          </div>
+          {data.account_reputation.spoof_penalty > 0 && (
+            <div className="mt-1.5 text-[11px] text-rose-400 font-medium">
+              ⚠️ Spoofing penalty applied: -{data.account_reputation.spoof_penalty} pts
+            </div>
+          )}
+        </div>
+      )}
+
       {auth.details && (
         <div className="mt-3 p-2 bg-mfx-bg/60 rounded-md border border-mfx-border">
           <p className="text-sm font-semibold text-mfx-muted uppercase tracking-wide mb-1">Source Details</p>

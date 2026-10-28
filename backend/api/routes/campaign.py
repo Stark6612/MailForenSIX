@@ -140,7 +140,7 @@ async def _process_campaign(campaign_id: str, raw_emails: list[bytes]):
             lambda: compute_distance_matrix(embeddings, ip_sets, asn_sets, domain_sets)
         )
 
-        # 5. Cluster
+        # 5. Cluster (min_cluster_size=3 to segment major threat campaigns and isolate noise)
         cluster_result = await loop.run_in_executor(
             None, lambda: cluster_emails(dist_matrix, min_cluster_size=3)
         )
@@ -164,7 +164,19 @@ async def _process_campaign(campaign_id: str, raw_emails: list[bytes]):
             profile = build_actor_profile(cluster_items)
 
             top_domains = list((profile.get("sender_domains") or {}).keys())
-            cluster_name = f"Campaign-{cid + 1} ({top_domains[0]})" if top_domains else f"Campaign-{cid + 1}"
+            dom_text = " ".join(top_domains).lower()
+            if "aadhar" in dom_text or "kyc" in dom_text:
+                theme = "Aadhaar / KYC Spoofing"
+            elif "paypal" in dom_text:
+                theme = "PayPal Account Limitation"
+            elif "microsoft" in dom_text or "docusign" in dom_text:
+                theme = "Microsoft 365 / DocuSign Lure"
+            elif top_domains:
+                theme = top_domains[0]
+            else:
+                theme = f"Campaign {cid + 1}"
+
+            cluster_name = f"{theme} ({top_domains[0] if top_domains else 'Multi-Domain'})"
 
             clusters.append({
                 "cluster_id":    cid,
@@ -204,7 +216,8 @@ async def _process_campaign(campaign_id: str, raw_emails: list[bytes]):
             "email_summaries": email_summaries,
             "umap_embedding": (
                 cluster_result.umap_embedding.tolist()
-                if cluster_result.umap_embedding is not None else None
+                if hasattr(cluster_result.umap_embedding, "tolist")
+                else cluster_result.umap_embedding
             ),
             "completed_at":   _now(),
         })

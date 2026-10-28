@@ -1,4 +1,4 @@
-﻿"""
+"""
 engines/auth.py -- Phase 4
 SPF / DKIM / DMARC authentication validation.
 
@@ -17,8 +17,12 @@ import logging
 from dataclasses import dataclass, field
 from typing import Optional
 
-import dns.resolver
-import dns.exception
+try:
+    import dns.resolver
+    import dns.exception
+    HAS_DNS = True
+except ImportError:
+    HAS_DNS = False
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +40,71 @@ class AuthValidationResult:
     source: str = 'header'  # 'header' | 'dns' | 'mixed'
     alignment_ok: bool = False   # From domain == Return-Path domain
     details: str = ''
+    reputation: Optional[dict] = None  # Module 5 ADRSE score breakdown
+
+
+def compute_account_reputation(
+    spf_status: str,
+    dkim_status: str,
+    dmarc_status: str,
+    alignment_ok: bool,
+    alignment_fail: bool = False
+) -> dict:
+    """
+    Module 5: Authentication Abuse Prevention & Account Reputation Scoring Engine (ADRSE).
+    Calculates discrete domain trust & asset protection score (0.0 to 100.0).
+    Reputation = w_SPF + w_DKIM + w_DMARC + w_Alignment - SpoofPenalty
+    """
+    # SPF (max 25)
+    if spf_status == 'pass':       s_spf = 25.0
+    elif spf_status == 'warn':     s_spf = 12.0
+    elif spf_status == 'none':     s_spf = 5.0
+    else:                          s_spf = 0.0
+
+    # DKIM (max 25)
+    if dkim_status == 'pass':      s_dkim = 25.0
+    elif dkim_status == 'warn':    s_dkim = 10.0
+    elif dkim_status == 'none':    s_dkim = 5.0
+    else:                          s_dkim = 0.0
+
+    # DMARC (max 30)
+    if dmarc_status == 'pass':     s_dmarc = 30.0
+    elif dmarc_status == 'warn':   s_dmarc = 15.0
+    elif dmarc_status == 'none':   s_dmarc = 5.0
+    else:                          s_dmarc = 0.0
+
+    # Alignment (max 20)
+    s_align = 20.0 if alignment_ok else 0.0
+
+    # Spoof penalty (Module 5 Authentication Abuse)
+    penalty = 20.0 if (alignment_fail or (not alignment_ok and spf_status == 'fail')) else 0.0
+
+    raw_score = s_spf + s_dkim + s_dmarc + s_align - penalty
+    score = max(0.0, min(100.0, raw_score))
+
+    if score >= 90.0:   grade = "A"
+    elif score >= 75.0: grade = "B"
+    elif score >= 50.0: grade = "C"
+    elif score >= 25.0: grade = "D"
+    else:               grade = "F"
+
+    summary = (
+        f"ADRSE Grade {grade} ({score:.0f}/100) — "
+        f"SPF: {s_spf:.0f}pts, DKIM: {s_dkim:.0f}pts, DMARC: {s_dmarc:.0f}pts, Alignment: {s_align:.0f}pts"
+    )
+    if penalty > 0:
+        summary += f", Spoof Penalty: -{penalty:.0f}pts"
+
+    return {
+        "reputation_score": score,
+        "grade": grade,
+        "spf_component": s_spf,
+        "dkim_component": s_dkim,
+        "dmarc_component": s_dmarc,
+        "alignment_component": s_align,
+        "spoof_penalty": penalty,
+        "summary": summary
+    }
 
 
 # ── Tier 1: Parse Authentication-Results header ────────────────────────────────
@@ -109,8 +178,8 @@ def _check_spf_dns(domain: str) -> tuple[str, str]:
     Check if the domain has an SPF TXT record.
     Returns (status, detail) — 'pass' means record exists, not that email passed.
     """
-    if not domain:
-        return 'none', 'No domain'
+    if not domain or not HAS_DNS:
+        return 'none', 'No domain or DNS resolver offline'
     try:
         answers = dns.resolver.resolve(domain, 'TXT', lifetime=5)
         for rdata in answers:
@@ -133,8 +202,8 @@ def _check_dmarc_dns(domain: str) -> tuple[str, str]:
     """
     Check if the domain has a DMARC TXT record at _dmarc.<domain>.
     """
-    if not domain:
-        return 'none', 'No domain'
+    if not domain or not HAS_DNS:
+        return 'none', 'No domain or DNS resolver offline'
     try:
         dmarc_domain = f'_dmarc.{domain}'
         answers = dns.resolver.resolve(dmarc_domain, 'TXT', lifetime=5)
@@ -251,5 +320,14 @@ def validate_auth(parsed, air_gapped: bool = False) -> AuthValidationResult:
     if result.dmarc == 'fail':  flags.append('DMARC FAIL -- policy violation')
     if not result.alignment_ok: flags.append('From/Return-Path domain mismatch (spoofing indicator)')
     result.details = ' | '.join(flags) if flags else 'No critical authentication failures detected.'
+
+    # -- Module 5: Account Reputation Scoring Engine (ADRSE) ---------------------
+    result.reputation = compute_account_reputation(
+        spf_status=result.spf,
+        dkim_status=result.dkim,
+        dmarc_status=result.dmarc,
+        alignment_ok=result.alignment_ok,
+        alignment_fail=not result.alignment_ok and result.spf == 'fail'
+    )
 
     return result

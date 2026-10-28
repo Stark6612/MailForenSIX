@@ -1,0 +1,50 @@
+[
+  {
+    "setup_id": "setup_1_bow",
+    "name": "Setup 1: Bag-of-Words (BoW)",
+    "description": "Raw unigram term frequencies (CountVectorizer, max_features=10,000)",
+    "feature_dimension": 10000,
+    "train_time_sec": 13.986,
+    "accuracy": 0.9142,
+    "macro_precision": 0.9149,
+    "macro_recall": 0.9142,
+    "macro_f1": 0.9145,
+    "delta_f1_vs_baseline": 0.0
+  },
+  {
+    "setup_id": "setup_2_tfidf_unigram",
+    "name": "Setup 2: TF-IDF (Unigram)",
+    "description": "Term Frequency-Inverse Document Frequency unigrams (max_features=10,000)",
+    "feature_dimension": 10000,
+    "train_time_sec": 8.031,
+    "accuracy": 0.9276,
+    "macro_precision": 0.9276,
+    "macro_recall": 0.9277,
+    "macro_f1": 0.9276,
+    "delta_f1_vs_baseline": 0.0131
+  },
+  {
+    "setup_id": "setup_3_tfidf_bigram",
+    "name": "Setup 3: TF-IDF (Unigram + Bigram)",
+    "description": "Sublinear TF-IDF with (1, 2) n-grams capturing phishing phrases",
+    "feature_dimension": 10000,
+    "train_time_sec": 22.679,
+    "accuracy": 0.9318,
+    "macro_precision": 0.9318,
+    "macro_recall": 0.9318,
+    "macro_f1": 0.9318,
+    "delta_f1_vs_baseline": 0.0173
+  },
+  {
+    "setup_id": "setup_4_hybrid_structural",
+    "name": "Setup 4: Hybrid (TF-IDF + Structural Metadata)",
+    "description": "Sublinear (1,2) TF-IDF concatenated with 8 dense structural cyber cues via scipy.sparse.hstack",
+    "feature_dimension": 10008,
+    "train_time_sec": 35.474,
+    "accuracy": 0.9328,
+    "macro_precision": 0.9328,
+    "macro_recall": 0.9328,
+    "macro_f1": 0.9327,
+    "delta_f1_vs_baseline": 0.0183
+  }
+]

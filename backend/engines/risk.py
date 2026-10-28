@@ -49,9 +49,14 @@ _TIER_THRESHOLDS = [
 
 def _auth_component(auth) -> float:
     """
-    Compute auth sub-score (0–100).
-    SPF / DKIM / DMARC each contribute, plus display-name spoofing.
+    Compute auth sub-score (0–100) using Module 5 ADRSE.
+    Authentication risk is the complement of account reputation:
+        Risk = 100 - Reputation
     """
+    if hasattr(auth, "reputation") and auth.reputation:
+        rep = auth.reputation.get("reputation_score", 100.0)
+        return float(max(0.0, min(100.0, 100.0 - rep)))
+
     score = 0.0
 
     # SPF

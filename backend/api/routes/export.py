@@ -6,7 +6,7 @@ POST /api/v1/export/anchor → anchor SHA-256 to OpenTimestamps / local file
 
 import logging
 from pydantic import BaseModel
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Body
 from fastapi.responses import Response
 
 from models.schemas import AnalysisResponse
@@ -30,21 +30,28 @@ router = APIRouter(prefix="/export", tags=["export"])
         500: {"description": "PDF generation failed"},
     },
 )
-async def export_pdf(data: AnalysisResponse):
+async def export_pdf(payload: dict = Body(...)):
     """
     Accept a full AnalysisResponse JSON body and return a forensic PDF.
     The frontend POSTs the cached analysis result from the last /analyze call.
     """
     try:
+        data = AnalysisResponse.model_validate(payload)
+    except Exception as val_e:
+        logger.warning(f"[export/pdf] Strict model_validate failed: {val_e}. Attempting tolerant construct.")
+        try:
+            data = AnalysisResponse.model_construct(**payload)
+        except Exception:
+            raise HTTPException(422, detail=f"Invalid analysis payload: {val_e}")
+
+    try:
         pdf_bytes = generate_dossier(data)
-    except RuntimeError as e:
-        logger.error(f"[export/pdf] weasyprint error: {e}")
-        raise HTTPException(500, detail=str(e))
     except Exception as e:
         logger.exception(f"[export/pdf] Unexpected error: {e}")
         raise HTTPException(500, detail=f"PDF generation failed: {e}")
 
-    sha_slug = (data.forensic.email_sha256[:12] if data.forensic else "report")
+    sha_raw = getattr(data.forensic, "email_sha256", "") if getattr(data, "forensic", None) else ""
+    sha_slug = sha_raw[:12] if sha_raw else "report"
     filename = f"mailforensix_{sha_slug}.pdf"
 
     return Response(
@@ -52,7 +59,8 @@ async def export_pdf(data: AnalysisResponse):
         media_type  = "application/pdf",
         headers     = {
             "Content-Disposition": f'attachment; filename="{filename}"',
-            "X-SHA256":            data.forensic.email_sha256 if data.forensic else "",
+            "X-SHA256":            sha_raw,
+            "Access-Control-Expose-Headers": "Content-Disposition, X-SHA256",
         },
     )
 

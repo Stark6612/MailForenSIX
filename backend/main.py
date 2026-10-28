@@ -12,6 +12,7 @@ from contextlib import asynccontextmanager
 
 from api.routes import analyze, export, tools as tools_route
 from api.routes import campaign as campaign_route
+from api.routes import models as models_route
 from core.config import settings
 from core.database import init_db
 from engines.classifier import load_model, model_loaded
@@ -70,6 +71,7 @@ app.include_router(analyze.router,          prefix="/api/v1", tags=["analysis"])
 app.include_router(export.router,           prefix="/api/v1", tags=["export"])
 app.include_router(campaign_route.router,   prefix="/api/v1", tags=["campaign"])
 app.include_router(tools_route.router,      prefix="/api/v1/tools", tags=["tools"])
+app.include_router(models_route.router,     prefix="/api/v1/models", tags=["models"])
 
 
 @app.api_route("/", methods=["GET", "HEAD", "POST"], include_in_schema=False)

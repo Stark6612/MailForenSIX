@@ -1,4 +1,4 @@
-﻿"""
+"""
 engines/clusterer.py
 ---------------------
 UMAP + HDBSCAN campaign clustering with Agglomerative fallback for small batches.
@@ -35,6 +35,8 @@ class ClusterResult:
 
 
 def _run_hdbscan(dist_matrix: np.ndarray, min_cluster_size: int) -> ClusterResult:
+    # 1. 2D Manifold Projection (UMAP with MDS fallback)
+    embedding = None
     try:
         import umap
         reducer = umap.UMAP(
@@ -44,24 +46,50 @@ def _run_hdbscan(dist_matrix: np.ndarray, min_cluster_size: int) -> ClusterResul
             min_dist=0.1,
             random_state=42,
         )
-        embedding = reducer.fit_transform(dist_matrix)
+        embedding = reducer.fit_transform(dist_matrix).tolist()
     except Exception as e:
-        logger.warning(f"[clusterer] UMAP failed: {e} - using distance matrix directly for HDBSCAN")
-        embedding = None
+        logger.info(f"[clusterer] UMAP unavailable ({e}) — falling back to MDS manifold projection.")
+        try:
+            from sklearn.manifold import MDS
+            mds = MDS(n_components=2, dissimilarity="precomputed", random_state=42, normalized_stress="auto")
+            embedding = mds.fit_transform(dist_matrix).tolist()
+        except Exception as mds_e:
+            logger.warning(f"[clusterer] MDS projection also failed: {mds_e}")
+            embedding = None
 
+    # 2. HDBSCAN Clustering (sklearn native with fallback)
+    labels = None
     try:
-        import hdbscan
-        clusterer = hdbscan.HDBSCAN(
+        from sklearn.cluster import HDBSCAN
+        clusterer = HDBSCAN(
             min_cluster_size=min_cluster_size,
             metric="precomputed",
             cluster_selection_method="eom",
         )
         labels = clusterer.fit_predict(dist_matrix).tolist()
-    except Exception as e:
-        logger.error(f"[clusterer] HDBSCAN failed: {e}")
-        labels = [-1] * len(dist_matrix)
+    except Exception as sk_e:
+        try:
+            import hdbscan
+            clusterer = hdbscan.HDBSCAN(
+                min_cluster_size=min_cluster_size,
+                metric="precomputed",
+                cluster_selection_method="eom",
+            )
+            labels = clusterer.fit_predict(dist_matrix).tolist()
+        except Exception as e:
+            logger.error(f"[clusterer] HDBSCAN failed: {e}")
+            labels = [-1] * len(dist_matrix)
 
     unique = set(l for l in labels if l >= 0)
+
+    # If HDBSCAN labeled everything as noise (-1), fall back to Agglomerative clustering
+    if len(unique) == 0 and len(dist_matrix) >= 2:
+        logger.info("[clusterer] HDBSCAN labeled all emails as noise — falling back to Agglomerative.")
+        n_clusters = min(5, max(2, int(len(dist_matrix) ** 0.5)))
+        fallback_res = _run_agglomerative(dist_matrix, n_clusters)
+        fallback_res.umap_embedding = embedding
+        return fallback_res
+
     return ClusterResult(
         labels=labels,
         n_clusters=len(unique),
@@ -86,14 +114,24 @@ def _run_agglomerative(dist_matrix: np.ndarray, n_clusters: int) -> ClusterResul
     except Exception as e:
         logger.error(f"[clusterer] AgglomerativeClustering failed: {e}")
         labels = [0] * n
+
+    # Compute 2D projection via MDS if possible
+    embedding = None
+    try:
+        from sklearn.manifold import MDS
+        mds = MDS(n_components=2, dissimilarity="precomputed", random_state=42, normalized_stress="auto")
+        embedding = mds.fit_transform(dist_matrix).tolist()
+    except Exception:
+        embedding = None
+
     unique = set(labels)
     return ClusterResult(
         labels=labels,
         n_clusters=len(unique),
         n_noise=0,
-        algorithm="Agglomerative (Ward, small-batch fallback)",
+        algorithm="Agglomerative Clustering",
         min_cluster_size=1,
-        umap_embedding=None,
+        umap_embedding=embedding,
     )
 
 

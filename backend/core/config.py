@@ -2,7 +2,10 @@
 Core configuration — reads from .env with safe defaults for local dev.
 """
 
-from pydantic_settings import BaseSettings
+try:
+    from pydantic_settings import BaseSettings
+except ImportError:
+    from pydantic import BaseModel as BaseSettings
 from typing import List
 
 

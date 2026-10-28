@@ -1,0 +1,45 @@
+{
+  "dataset_name": "MailForenSIX AICS 3-Class Benchmark Corpus",
+  "total_samples": 31164,
+  "train_samples": 24931,
+  "test_samples": 6233,
+  "classes": {
+    "0": {
+      "name": "Legitimate",
+      "samples": 10388
+    },
+    "1": {
+      "name": "Spam",
+      "samples": 10388
+    },
+    "2": {
+      "name": "Phishing",
+      "samples": 10388
+    }
+  },
+  "vectorizer": {
+    "max_features": 10000,
+    "ngram_range": [
+      1,
+      2
+    ],
+    "sublinear_tf": true,
+    "vocab_size": 10000,
+    "synthetic_tokens": [
+      "url_token",
+      "ip_token",
+      "urgency_token",
+      "currency_token"
+    ]
+  },
+  "sources": [
+    "CEAS_08.csv",
+    "Phishing_Email.csv",
+    "Enron.csv",
+    "phishing_email.csv",
+    "Nigerian_Fraud.csv",
+    "SpamAssasin.csv",
+    "Nazario.csv",
+    "Ling.csv"
+  ]
+}

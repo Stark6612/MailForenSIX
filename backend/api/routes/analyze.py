@@ -12,7 +12,7 @@ import hashlib
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, Query, HTTPException
 
 from models.schemas import (
     AnalysisResponse, ErrorResponse,
@@ -20,6 +20,7 @@ from models.schemas import (
     DomainIntel, LIMESentence, ForensicMeta,
     RiskTier, ThreatLabel, CertInResult,
     AttachmentForensic, RiskBreakdown,
+    AccountReputation, ModelInferenceMeta,
 )
 from core.config import settings
 from engines.parser     import parse_eml, ParsedEmail
@@ -61,6 +62,7 @@ def _map_auth_status(s: str) -> AuthStatus:
 def _map_threat_label(label: str) -> ThreatLabel:
     return {
         'phishing':     ThreatLabel.PHISHING,
+        'spam':         ThreatLabel.SPAM,
         'suspicious':   ThreatLabel.SUSPICIOUS,
         'safe':         ThreatLabel.SAFE,
         'bec':          ThreatLabel.BEC,
@@ -79,13 +81,17 @@ def _map_risk_tier(tier: str) -> RiskTier:
 
 # ── Async engine wrappers ──────────────────────────────────────────────────────
 
-async def _run_classifier(parsed: ParsedEmail):
-    """Run TF-IDF + XGBoost intent classifier + LIME explanations."""
+async def _run_classifier(parsed: ParsedEmail, model_id: str = "lr"):
+    """Run AICS Multi-Model intent classifier + LIME explanations."""
     body = (parsed.body_text or "") + " " + (parsed.body_html or "")
     loop = asyncio.get_event_loop()
 
-    label, confidence = await loop.run_in_executor(None, predict_intent, body)
-    lime_raw          = await loop.run_in_executor(None, explain_sentences, body)
+    label, confidence, class_probs, model_name = await loop.run_in_executor(
+        None, predict_intent, body, model_id
+    )
+    lime_raw = await loop.run_in_executor(
+        None, explain_sentences, body, model_id
+    )
 
     lime_sentences = [
         LIMESentence(
@@ -95,7 +101,14 @@ async def _run_classifier(parsed: ParsedEmail):
         )
         for item in lime_raw
     ]
-    return _map_threat_label(label), confidence, lime_sentences
+
+    model_meta = ModelInferenceMeta(
+        model_name=model_name,
+        model_id=model_id,
+        class_probabilities=class_probs,
+    )
+
+    return _map_threat_label(label), confidence, lime_sentences, model_meta
 
 
 async def _run_geo(parsed: ParsedEmail) -> list[RelayHop]:
@@ -160,6 +173,7 @@ async def _run_domain(parsed: ParsedEmail) -> DomainIntel | None:
 async def analyze_email(
     eml_file:    UploadFile | None = File(default=None),
     raw_headers: str | None        = Form(default=None),
+    model:       str               = Query(default="lr", description="AICS model id: lr, svm, nb, dt, xgb"),
 ):
     # ── Input validation ───────────────────────────────────────────────────────
     if not eml_file and not raw_headers:
@@ -174,7 +188,14 @@ async def analyze_email(
     else:
         raw_bytes = raw_headers.encode('utf-8', errors='replace')
         if not _validate_mime(raw_bytes):
-            raise HTTPException(400, detail='INVALID_MIME: Pasted text is not valid email source.')
+            # If user pastes raw email body without RFC 5322 headers, wrap with synthetic envelope
+            synthetic = (
+                f"Subject: Suspicious Email Message\n"
+                f"From: unknown@external-source.org\n"
+                f"Date: {datetime.now(timezone.utc).strftime('%a, %d %b %Y %H:%M:%S +0000')}\n\n"
+                f"{raw_headers}"
+            )
+            raw_bytes = synthetic.encode('utf-8', errors='replace')
 
     email_hash   = _sha256(raw_bytes)
     analysis_id  = str(uuid.uuid4())
@@ -186,11 +207,11 @@ async def analyze_email(
 
     # ── Phase 2: All engines in parallel ──────────────────────────────────────
     (auth_result,
-     (threat_label, confidence, lime_sentences),
+     (threat_label, confidence, lime_sentences, model_meta),
      relay_hops,
      domain_intel) = await asyncio.gather(
         loop.run_in_executor(None, lambda: validate_auth(parsed, air_gapped=settings.AIR_GAPPED)),   # Phase 4 -- air-gapped aware
-        _run_classifier(parsed),                              # Phase 2 — NLP
+        _run_classifier(parsed, model_id=model),             # Phase 2 & 6 — Multi-Model NLP
         _run_geo(parsed),                                     # Phase 2 — Geo
         _run_domain(parsed),                                  # Phase 2 — Domain
     )
@@ -286,29 +307,45 @@ async def analyze_email(
     if has_malicious_att:
         warnings.append('High-risk executable/masquerading attachment detected in email body.')
 
+    # ── Module 5: Account Reputation ───────────────────────────────────────────
+    account_rep = None
+    if hasattr(auth_result, "reputation") and auth_result.reputation:
+        account_rep = AccountReputation(
+            reputation_score    = auth_result.reputation.get("reputation_score", 100.0),
+            grade               = auth_result.reputation.get("grade", "A"),
+            spf_component       = auth_result.reputation.get("spf_component", 25.0),
+            dkim_component      = auth_result.reputation.get("dkim_component", 25.0),
+            dmarc_component     = auth_result.reputation.get("dmarc_component", 30.0),
+            alignment_component = auth_result.reputation.get("alignment_component", 20.0),
+            spoof_penalty       = auth_result.reputation.get("spoof_penalty", 0.0),
+            summary             = auth_result.reputation.get("summary", ""),
+        )
+
     return AnalysisResponse(
-        analysis_id    = analysis_id,
-        subject        = parsed.subject,
-        sender         = parsed.from_,
-        recipient      = parsed.to,
-        date           = parsed.date,
-        risk_score     = risk_score,
-        risk_tier      = risk_tier,
-        threat_label   = threat_label,
-        confidence     = confidence,
-        risk_breakdown = risk_breakdown,
-        auth           = AuthResult(
-            spf    = _map_auth_status(auth_result.spf),
-            dkim   = _map_auth_status(auth_result.dkim),
-            dmarc  = _map_auth_status(auth_result.dmarc),
+        analysis_id        = analysis_id,
+        subject            = parsed.subject,
+        sender             = parsed.from_,
+        recipient          = parsed.to,
+        date               = parsed.date,
+        risk_score         = risk_score,
+        risk_tier          = risk_tier,
+        threat_label       = threat_label,
+        confidence         = confidence,
+        risk_breakdown     = risk_breakdown,
+        auth               = AuthResult(
+            spf     = _map_auth_status(auth_result.spf),
+            dkim    = _map_auth_status(auth_result.dkim),
+            dmarc   = _map_auth_status(auth_result.dmarc),
             details = auth_result.details,
         ),
-        lime_sentences = lime_sentences,
-        relay_hops     = relay_hops,
-        domain_intel   = domain_intel,
-        attachments    = attachment_forensics,
-        cert_in        = cert_in_result,
-        forensic       = ForensicMeta(
+        lime_sentences     = lime_sentences,
+        relay_hops         = relay_hops,
+        domain_intel       = domain_intel,
+        attachments        = attachment_forensics,
+        cert_in            = cert_in_result,
+        account_reputation = account_rep,
+        model_inference    = model_meta,
+        forensic           = ForensicMeta(
             email_sha256       = email_hash,
             analysis_timestamp = timestamp,
             air_gapped         = settings.AIR_GAPPED,

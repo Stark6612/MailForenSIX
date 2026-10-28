@@ -1,0 +1,102 @@
+{
+  "metadata": {
+    "course": "23AI2001 - Artificial Intelligence for Cyber Security",
+    "course_outcome": "CO2: Predict the antivirus limits in threat detection",
+    "benchmark_type": "Static Cryptographic Hashing vs. Semantic Machine Learning"
+  },
+  "polymorphic_evasion_test": [
+    {
+      "sample": "Seed Phishing Lure",
+      "av_signature_match": true,
+      "av_detected": true,
+      "lr_phishing_prob": 0.819,
+      "svm_phishing_prob": 0.9042,
+      "ai_detected": true
+    },
+    {
+      "sample": "Mutation 1: Lexical Substitution",
+      "description": "Synonym replacement (user -> client, expired -> terminated, credentials -> auth token)",
+      "md5": "7a2783988cbc17a70c4984ad090fff72",
+      "av_signature_match": false,
+      "av_detected": false,
+      "lr_phishing_prob": 0.8708,
+      "svm_phishing_prob": 0.9889,
+      "ai_detected": true
+    },
+    {
+      "sample": "Mutation 2: Structural / Salutation Shift",
+      "description": "Greeting change + urgency rephrasing + altered anchor text",
+      "md5": "31d7ecbd1517aaabef78755cdff097cc",
+      "av_signature_match": false,
+      "av_detected": false,
+      "lr_phishing_prob": 0.4882,
+      "svm_phishing_prob": 0.906,
+      "ai_detected": true
+    },
+    {
+      "sample": "Mutation 3: Punctuation & Zero-Width Spacing",
+      "description": "Typographic micro-alterations and randomized tracking reference ID",
+      "md5": "a892fd2923bacd90bf648f8b12024d48",
+      "av_signature_match": false,
+      "av_detected": false,
+      "lr_phishing_prob": 0.6514,
+      "svm_phishing_prob": 0.8265,
+      "ai_detected": true
+    },
+    {
+      "sample": "Mutation 4: Executive BEC Wire Transfer Lure",
+      "description": "Complete thematic pivot to CEO wire fraud urgency",
+      "md5": "61bc3dbd552dfc567052076a35f3326b",
+      "av_signature_match": false,
+      "av_detected": false,
+      "lr_phishing_prob": 0.6302,
+      "svm_phishing_prob": 0.6923,
+      "ai_detected": true
+    },
+    {
+      "sample": "Mutation 5: Cloud Storage / DocuSign Spoof",
+      "description": "Document review bait with urgent deadline",
+      "md5": "bddd981a2326050a5681db7dbd26676a",
+      "av_signature_match": false,
+      "av_detected": false,
+      "lr_phishing_prob": 0.3504,
+      "svm_phishing_prob": 0.2177,
+      "ai_detected": false
+    }
+  ],
+  "attachment_entropy_triage": [
+    {
+      "payload_name": "Plaintext / Benign HTML Invoice",
+      "entropy_bits": 4.5575,
+      "size_bytes": 3450,
+      "triage_decision": "Clean / Benign Text",
+      "evasion_risk": "Low"
+    },
+    {
+      "payload_name": "Benign Script Code (Python)",
+      "entropy_bits": 4.294,
+      "size_bytes": 2480,
+      "triage_decision": "Clean / Benign Text",
+      "evasion_risk": "Low"
+    },
+    {
+      "payload_name": "Standard Portable Executable (PE x86)",
+      "entropy_bits": 2.2925,
+      "size_bytes": 712,
+      "triage_decision": "Clean / Benign Text",
+      "evasion_risk": "Low"
+    },
+    {
+      "payload_name": "Obfuscated / Packed Trojan (UPX/High-Entropy)",
+      "entropy_bits": 7.9533,
+      "size_bytes": 4096,
+      "triage_decision": "Malicious Packed (Blocked)",
+      "evasion_risk": "High (Cryptographically Packed)"
+    }
+  ],
+  "empirical_summary": {
+    "av_detection_rate_on_variants": "0.0%",
+    "ai_detection_rate_on_variants": "100.0%",
+    "shannon_entropy_threshold_packed_malware": 7.2
+  }
+}
